@@ -1,148 +1,210 @@
-import React, { useState } from 'react';
-import { Grid, Card, CardContent, Typography, Avatar, Button, Dialog, DialogTitle, DialogContent, List, ListItem, ListItemAvatar, ListItemText, Box, AppBar, Tabs, Tab } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { Grid, Card, CardContent, Typography, Avatar, Button, Box, IconButton, Dialog, DialogTitle, DialogContent, TextField, List, ListItem, ListItemText } from '@mui/material';
 import GroupIcon from '@mui/icons-material/Group';
+import AddIcon from '@mui/icons-material/Add';
+import axios from 'axios';
+import MessagePopover from './MessagePopover';
 
-const initialGroups = [
-  {
-    id: 1,
-    name: 'Organic Farming Enthusiasts',
-    description: 'A group for people passionate about organic farming.',
-    image: 'https://via.placeholder.com/300',
-    members: [
-      { id: 1, name: 'Alice Smith', avatar: 'https://via.placeholder.com/50' },
-      { id: 2, name: 'Bob Johnson', avatar: 'https://via.placeholder.com/50' },
-    ],
-  },
-  {
-    id: 2,
-    name: 'Urban Gardeners',
-    description: 'Discussing tips and tricks for urban gardening.',
-    image: 'https://via.placeholder.com/300',
-    members: [
-      { id: 1, name: 'Carol Williams', avatar: 'https://via.placeholder.com/50' },
-      { id: 2, name: 'David Brown', avatar: 'https://via.placeholder.com/50' },
-    ],
-  },
-  {
-    id: 3,
-    name: 'Sustainable Agriculture',
-    description: 'Promoting sustainable agricultural practices.',
-    image: 'https://via.placeholder.com/300',
-    members: [
-      { id: 1, name: 'Eve Davis', avatar: 'https://via.placeholder.com/50' },
-      { id: 2, name: 'Frank Miller', avatar: 'https://via.placeholder.com/50' },
-    ],
-  },
-];
+const API_URL = `${import.meta.env.VITE_API_URL}/grupos`;
 
 const GroupsSection = () => {
-  const [groups] = useState(initialGroups);
+  const [groups, setGroups] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState(null);
-  const [tabValue, setTabValue] = useState(0);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [openCreateDialog, setOpenCreateDialog] = useState(false); // Definir estado para el diálogo de creación de grupo
+  const [newGroup, setNewGroup] = useState({ nombre: '', descripcion: '', imagen_url: '' });
+  const [miembros, setMiembros] = useState([]);
+  const [nuevoMiembro, setNuevoMiembro] = useState('');
 
-  const handleOpenGroup = (group) => {
+  useEffect(() => {
+    const fetchGroups = async () => {
+      try {
+        const response = await axios.get(API_URL, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        });
+        setGroups(response.data);
+      } catch (error) {
+        console.error('Error fetching groups:', error);
+      }
+    };
+
+    fetchGroups();
+  }, []);
+
+  const handleOpenMessages = async (event, group) => {
+    setAnchorEl(event.currentTarget);
     setSelectedGroup(group);
+    try {
+      const response = await axios.get(`${API_URL}/${group.grupo_id}/mensajes`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      setMessages(response.data);
+    } catch (error) {
+      console.error('Error fetching group messages:', error);
+    }
   };
 
-  const handleCloseGroup = () => {
+  const handleCloseMessages = () => {
+    setAnchorEl(null);
     setSelectedGroup(null);
-    setTabValue(0);
+    setMessages([]);
   };
 
-  const handleTabChange = (event, newValue) => {
-    setTabValue(newValue);
+  const handleSendMessage = async () => {
+    if (newMessage.trim() === '') return;
+
+    try {
+      const response = await axios.post(
+        `${API_URL}/${selectedGroup.grupo_id}/mensajes`,
+        { contenido: newMessage },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        }
+      );
+      setMessages([...messages, response.data]);
+      setNewMessage('');
+    } catch (error) {
+      console.error('Error sending message:', error);
+    }
+  };
+
+  const handleCreateGroup = async () => {
+    try {
+      const response = await axios.post(`${API_URL}/create`, newGroup, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      const createdGroup = response.data;
+
+      // Añadir miembros al grupo recién creado
+      for (const miembro of miembros) {
+        await axios.post(`${API_URL}/${createdGroup.grupo_id}/miembros`, { usuario_id: miembro }, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        });
+      }
+
+      setGroups([...groups, createdGroup]);
+      setOpenCreateDialog(false);
+      setNewGroup({ nombre: '', descripcion: '', imagen_url: '' });
+      setMiembros([]);
+    } catch (error) {
+      console.error('Error creating group:', error);
+    }
+  };
+
+  const handleAddMiembro = () => {
+    if (nuevoMiembro.trim() !== '') {
+      setMiembros([...miembros, nuevoMiembro]);
+      setNuevoMiembro('');
+    }
   };
 
   return (
-    <>
+    <Box>
+      <Button variant="contained" color="primary" onClick={() => setOpenCreateDialog(true)}>
+        Crear Grupo
+      </Button>
       <Grid container spacing={3}>
         {groups.map((group) => (
-          <Grid item xs={12} sm={6} md={4} key={group.id}>
+          <Grid item xs={12} sm={6} md={4} key={group.grupo_id}>
             <Card sx={{ borderRadius: '16px', boxShadow: 3 }}>
               <Box display="flex" alignItems="center" p={2}>
                 <Avatar sx={{ bgcolor: 'primary.main', mr: 2 }}>
                   <GroupIcon />
                 </Avatar>
                 <Box>
-                  <Typography variant="h6" sx={{ fontWeight: 'bold' }}>{group.name}</Typography>
-                  <Typography variant="body2" color="textSecondary">{group.description}</Typography>
+                  <Typography variant="h6" sx={{ fontWeight: 'bold' }}>{group.nombre}</Typography>
+                  <Typography variant="body2" color="textSecondary">{group.descripcion}</Typography>
                 </Box>
+                <IconButton
+                  aria-label="messages"
+                  onClick={(event) => handleOpenMessages(event, group)}
+                >
+                  <GroupIcon />
+                </IconButton>
               </Box>
-              <CardContent>
-                <Button variant="contained" color="primary" onClick={() => handleOpenGroup(group)}>
-                  View Group
-                </Button>
-              </CardContent>
             </Card>
           </Grid>
         ))}
       </Grid>
 
       {selectedGroup && (
-        <Dialog 
-          open={Boolean(selectedGroup)} 
-          onClose={handleCloseGroup} 
-          maxWidth="md" 
-          fullWidth
-          PaperProps={{ sx: { borderRadius: '16px' } }} // Añadido borderRadius aquí
-        >
-          <DialogTitle sx={{ textAlign: 'center' }}>
-            <Typography variant="h4">{selectedGroup.name}</Typography>
-          </DialogTitle>
-          <DialogContent>
-            <Box sx={{ textAlign: 'center', mb: 2 }}>
-              <Avatar
-                src={selectedGroup.image}
-                alt={selectedGroup.name}
-                sx={{ width: 150, height: 150, margin: 'auto', borderRadius: '50%' }}
-              />
-            </Box>
-            <AppBar position="static" color="default" sx={{ borderRadius: '8px', mb: 2 }}>
-              <Tabs value={tabValue} onChange={handleTabChange} variant="fullWidth" indicatorColor="primary" textColor="primary">
-                <Tab label="Información" />
-                <Tab label="Miembros" />
-                <Tab label="Chat Grupal" />
-              </Tabs>
-            </AppBar>
-            {tabValue === 0 && (
-              <Box sx={{ p: 2 }}>
-                <Typography variant="body1" gutterBottom>
-                  {selectedGroup.description}
-                </Typography>
-                <Typography variant="body2" color="textSecondary">
-                  <strong>Fecha de creación:</strong> 1 de Enero de 2022
-                </Typography>
-                <Typography variant="body2" color="textSecondary">
-                  <strong>Ubicación:</strong> Bogotá, Colombia
-                </Typography>
-                <Typography variant="body2" color="textSecondary">
-                  <strong>Número de miembros:</strong> {selectedGroup.members.length}
-                </Typography>
-              </Box>
-            )}
-            {tabValue === 1 && (
-              <List>
-                {selectedGroup.members.map((member) => (
-                  <ListItem key={member.id}>
-                    <ListItemAvatar>
-                      <Avatar alt={member.name} src={member.avatar} />
-                    </ListItemAvatar>
-                    <ListItemText primary={member.name} />
-                  </ListItem>
-                ))}
-              </List>
-            )}
-            {tabValue === 2 && (
-              <Box sx={{ p: 2, textAlign: 'center' }}>
-                <Button variant="contained" color="primary">
-                  Unirte al chat grupal
-                </Button>
-              </Box>
-            )}
-          </DialogContent>
-        </Dialog>
+        <MessagePopover
+          anchorEl={anchorEl}
+          handleClose={handleCloseMessages}
+          messages={messages}
+          handleSendMessage={handleSendMessage}
+          newMessage={newMessage}
+          setNewMessage={setNewMessage}
+        />
       )}
-    </>
+
+      <Dialog open={openCreateDialog} onClose={() => setOpenCreateDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Crear Nuevo Grupo</DialogTitle>
+        <DialogContent>
+          <TextField
+            fullWidth
+            variant="outlined"
+            label="Nombre del Grupo"
+            value={newGroup.nombre}
+            onChange={(e) => setNewGroup({ ...newGroup, nombre: e.target.value })}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            fullWidth
+            variant="outlined"
+            label="Descripción"
+            value={newGroup.descripcion}
+            onChange={(e) => setNewGroup({ ...newGroup, descripcion: e.target.value })}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            fullWidth
+            variant="outlined"
+            label="URL de la Imagen"
+            value={newGroup.imagen_url}
+            onChange={(e) => setNewGroup({ ...newGroup, imagen_url: e.target.value })}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            fullWidth
+            variant="outlined"
+            label="Añadir Miembro"
+            value={nuevoMiembro}
+            onChange={(e) => setNuevoMiembro(e.target.value)}
+            sx={{ mb: 2 }}
+            InputProps={{
+              endAdornment: (
+                <IconButton onClick={handleAddMiembro}>
+                  <AddIcon />
+                </IconButton>
+              ),
+            }}
+          />
+          <List>
+            {miembros.map((miembro, index) => (
+              <ListItem key={index}>
+                <ListItemText primary={miembro} />
+              </ListItem>
+            ))}
+          </List>
+          <Button variant="contained" color="primary" onClick={handleCreateGroup}>
+            Crear Grupo
+          </Button>
+        </DialogContent>
+      </Dialog>
+    </Box>
   );
 };
 
