@@ -1,24 +1,51 @@
-import React from 'react';
-import { Box, Drawer, List, ListItem, ListItemAvatar, ListItemText, Avatar, Typography, IconButton, Divider } from '@mui/material';
-import { Close } from '@mui/icons-material';
+import React, { useState, useEffect } from 'react';
+import { Box, Drawer, List, ListItem, ListItemAvatar, ListItemText, Avatar, Typography, IconButton, Divider, TextField, Button } from '@mui/material';
+import { Close, Send } from '@mui/icons-material';
+import axios from 'axios';
 
-const messages = [
-  {
-    id: 1,
-    author: 'John Doe',
-    avatar: 'https://via.placeholder.com/40',
-    message: 'Hello, how are you?',
-  },
-  {
-    id: 2,
-    author: 'Jane Smith',
-    avatar: 'https://via.placeholder.com/40',
-    message: 'Can we meet tomorrow?',
-  },
-  // More messages...
-];
+const ChatSidebar = ({ open, handleClose, chatId }) => {
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState('');
 
-const ChatSidebar = ({ open, handleClose }) => {
+  useEffect(() => {
+    if (open && chatId) {
+      fetchMessages(chatId);
+    }
+  }, [open, chatId]);
+
+  const fetchMessages = async (chatId) => {
+    try {
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/chat/mensajes/${chatId}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      setMessages(response.data);
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+    }
+  };
+
+  const handleSendMessage = async () => {
+    if (newMessage.trim() === '') return;
+
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/chat/${chatId}/mensajes`,
+        { contenido: newMessage },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        }
+      );
+      setMessages([...messages, response.data]);
+      setNewMessage('');
+    } catch (error) {
+      console.error('Error sending message:', error);
+    }
+  };
+
   return (
     <Drawer
       anchor="right"
@@ -43,14 +70,26 @@ const ChatSidebar = ({ open, handleClose }) => {
         <Divider />
         <List>
           {messages.map((message) => (
-            <ListItem button key={message.id} sx={{ borderRadius: 1 }}>
+            <ListItem key={message.chat_id} sx={{ borderRadius: 1 }}>
               <ListItemAvatar>
-                <Avatar src={message.avatar} />
+                <Avatar src={message.usuario?.avatar ? `data:image/jpeg;base64,${message.usuario.avatar}` : 'https://via.placeholder.com/40'} />
               </ListItemAvatar>
-              <ListItemText primary={message.author} secondary={message.message} />
+              <ListItemText primary={message.usuario?.nombre} secondary={message.contenido} />
             </ListItem>
           ))}
         </List>
+        <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
+          <TextField
+            fullWidth
+            variant="outlined"
+            placeholder="Type a message..."
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+          />
+          <IconButton color="primary" onClick={handleSendMessage}>
+            <Send />
+          </IconButton>
+        </Box>
       </Box>
     </Drawer>
   );

@@ -115,12 +115,12 @@ const AdminPage = () => {
               {sections.find((section) => section.id === activeSection)?.label}
             </Typography>
             <IconButton color="inherit">
-              <Badge badgeContent={4} color="secondary">
+              <Badge badgeContent={4} color="primary">
                 <NotificationsIcon />
               </Badge>
             </IconButton>
             <IconButton color="inherit" onClick={handleMessagesClick}>
-              <Badge badgeContent={3} color="secondary">
+              <Badge badgeContent={3} color="primary">
                 <MailIcon />
               </Badge>
             </IconButton>
