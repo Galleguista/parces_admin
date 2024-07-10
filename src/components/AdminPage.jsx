@@ -13,7 +13,7 @@ import NotificationsIcon from '@mui/icons-material/Notifications';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import ProfileSection from './sections/profile';
 import ProjectsSection from './sections/projects';
-import MessagesSection from './sections/messages';
+import ChatsSection from './sections/messages';
 import GroupsSection from './sections/groups';
 import ResourcesSection from './sections/resources';
 import AchievementsSection from './sections/achievements';
@@ -131,7 +131,7 @@ const AdminPage = () => {
         </AppBar>
         {activeSection === 'profile' && <ProfileSection />}
         {activeSection === 'projects' && <ProjectsSection />}
-        {activeSection === 'messages' && <MessagesSection />}
+        {activeSection === 'messages' && <ChatsSection />}
         {activeSection === 'groups' && <GroupsSection />}
         {activeSection === 'resources' && <ResourcesSection />}
         {activeSection === 'achievements' && <AchievementsSection />}
