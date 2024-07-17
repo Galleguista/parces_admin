@@ -1,11 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Grid, Card, CardContent, Typography, Avatar, Button, Dialog, DialogTitle, DialogContent, List, ListItem, ListItemAvatar, ListItemText, Box, AppBar, Tabs, Tab, Divider, TextField, IconButton, Fab, DialogActions
+  Grid, Card, CardContent, Typography, Avatar, Button, Dialog, DialogTitle, DialogContent, List, ListItem, ListItemAvatar, ListItemText, Box, AppBar, Tabs, Tab, Divider, TextField, IconButton, Fab, DialogActions, Drawer
 } from '@mui/material';
 import GroupIcon from '@mui/icons-material/Group';
 import AddIcon from '@mui/icons-material/Add';
+import CloseIcon from '@mui/icons-material/Close';
+import SendIcon from '@mui/icons-material/Send';
 import axios from 'axios';
-import ChatSidebar from './ChatSidebar';
+
+const instance = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000',
+});
 
 const GroupsSection = () => {
   const [groups, setGroups] = useState([]);
@@ -16,15 +21,18 @@ const GroupsSection = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
   const [newGroupDescription, setNewGroupDescription] = useState('');
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [newMemberId, setNewMemberId] = useState('');
+  const [selectedUserId, setSelectedUserId] = useState('');
 
-  // Fetch groups from the backend
   useEffect(() => {
     fetchGroups();
   }, []);
 
   const fetchGroups = async () => {
     try {
-      const response = await axios.get(`${import.meta.env.VITE_API_URL}/grupos`, {
+      const response = await instance.get('/grupos', {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
@@ -36,7 +44,10 @@ const GroupsSection = () => {
   };
 
   const handleOpenGroup = (group) => {
-    setSelectedGroup(group);
+    setSelectedGroup({
+      ...group,
+      miembros: group.miembros || [],
+    });
   };
 
   const handleCloseGroup = () => {
@@ -50,7 +61,7 @@ const GroupsSection = () => {
 
   const handleJoinGroupChat = async (groupId) => {
     try {
-      await axios.post(`${import.meta.env.VITE_API_URL}/grupos/${groupId}/miembros`, {}, {
+      await instance.post(`/grupos/${groupId}/miembros`, {}, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
@@ -58,6 +69,7 @@ const GroupsSection = () => {
       setChatId(groupId);
       setIsChatOpen(true);
       handleCloseGroup();
+      fetchMessages(groupId);
     } catch (error) {
       console.error('Error joining group chat:', error);
     }
@@ -65,10 +77,15 @@ const GroupsSection = () => {
 
   const handleCreateGroup = async () => {
     try {
-      const response = await axios.post(`${import.meta.env.VITE_API_URL}/grupos/create`, {
+      const response = await instance.post('/grupos/create', {
         nombre: newGroupName,
         descripcion: newGroupDescription,
       }, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      await instance.post(`/grupos/${response.data.grupo_id}/miembros`, {}, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
@@ -88,6 +105,70 @@ const GroupsSection = () => {
 
   const handleCloseCreateDialog = () => {
     setIsCreateDialogOpen(false);
+  };
+
+  const fetchMessages = async (chatId) => {
+    try {
+      const response = await instance.get(`/chats/${chatId}/messages`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      setMessages(response.data);
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+    }
+  };
+
+  const handleSendMessage = async () => {
+    if (newMessage.trim()) {
+      try {
+        const response = await instance.post(`/chats/${chatId}/messages`, {
+          contenido: newMessage,
+        }, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        });
+        setMessages([...messages, response.data]);
+        setNewMessage('');
+      } catch (error) {
+        console.error('Error sending message:', error);
+      }
+    }
+  };
+
+  const handleAddMember = async () => {
+    if (newMemberId.trim()) {
+      try {
+        await instance.post(`/grupos/${selectedGroup.grupo_id}/miembros`, {
+          usuario_id: newMemberId,
+        }, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        });
+        fetchGroups();
+        setNewMemberId('');
+      } catch (error) {
+        console.error('Error adding member:', error);
+      }
+    }
+  };
+
+  const handleStartPrivateChat = async (receptorId) => {
+    try {
+      const response = await instance.post('/grupos/chats/private', { receptorId }, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      setChatId(response.data.chat_id);
+      setIsChatOpen(true);
+      fetchMessages(response.data.chat_id);
+    } catch (error) {
+      console.error('Error starting private chat:', error);
+    }
   };
 
   return (
@@ -121,10 +202,10 @@ const GroupsSection = () => {
           onClose={handleCloseGroup}
           maxWidth="md"
           fullWidth
-          PaperProps={{ sx: { borderRadius: '16px' } }} // Añadido borderRadius aquí
+          PaperProps={{ sx: { borderRadius: '16px' } }}
         >
           <DialogTitle sx={{ textAlign: 'center' }}>
-            <Typography variant="h4">{selectedGroup.nombre}</Typography>
+            <Typography variant="h5">{selectedGroup.nombre}</Typography>
           </DialogTitle>
           <DialogContent>
             <Box sx={{ textAlign: 'center', mb: 2 }}>
@@ -155,16 +236,30 @@ const GroupsSection = () => {
                 <Typography variant="body2" color="textSecondary">
                   <strong>Número de miembros:</strong> {selectedGroup.miembros.length}
                 </Typography>
+                <Box sx={{ mt: 2 }}>
+                  <TextField
+                    label="ID del nuevo miembro"
+                    fullWidth
+                    value={newMemberId}
+                    onChange={(e) => setNewMemberId(e.target.value)}
+                  />
+                  <Button variant="contained" color="primary" sx={{ mt: 1 }} onClick={handleAddMember}>
+                    Añadir Miembro
+                  </Button>
+                </Box>
               </Box>
             )}
             {tabValue === 1 && (
               <List>
                 {selectedGroup.miembros.map((member) => (
-                  <ListItem key={member.usuario_id}>
+                  <ListItem key={member.usuario_id} onClick={() => setSelectedUserId(member.usuario_id)}>
                     <ListItemAvatar>
                       <Avatar alt={member.nombre} src={`data:image/jpeg;base64,${member.avatar}`} />
                     </ListItemAvatar>
                     <ListItemText primary={member.nombre} />
+                    <Button variant="contained" color="secondary" onClick={() => handleStartPrivateChat(member.usuario_id)}>
+                      Chatear
+                    </Button>
                   </ListItem>
                 ))}
               </List>
@@ -180,7 +275,38 @@ const GroupsSection = () => {
         </Dialog>
       )}
 
-      <ChatSidebar open={isChatOpen} handleClose={() => setIsChatOpen(false)} chatId={chatId} />
+      <Drawer anchor="right" open={isChatOpen} onClose={() => setIsChatOpen(false)}>
+        <Box sx={{ width: 400, p: 2 }}>
+          <IconButton onClick={() => setIsChatOpen(false)}>
+            <CloseIcon />
+          </IconButton>
+          <Divider sx={{ my: 2 }} />
+          <Box sx={{ overflowY: 'auto', height: 'calc(100vh - 200px)' }}>
+            {messages.map((message) => (
+              <Box key={message.mensaje_id} sx={{ mb: 2 }}>
+                <Typography variant="body2" color="textSecondary">
+                  {message.usuario.nombre}:
+                </Typography>
+                <Typography variant="body1">
+                  {message.contenido}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+          <Divider sx={{ my: 2 }} />
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <TextField
+              fullWidth
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              placeholder="Escribe un mensaje..."
+            />
+            <IconButton color="primary" onClick={handleSendMessage}>
+              <SendIcon />
+            </IconButton>
+          </Box>
+        </Box>
+      </Drawer>
 
       <Fab
         color="primary"
