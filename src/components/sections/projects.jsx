@@ -1,19 +1,79 @@
-import React, { useState } from 'react';
-import { Container, Grid, TextField, MenuItem, Select, InputLabel, FormControl, Box, Button, Card, CardContent, CardMedia, Typography, Fab, Dialog, DialogContent, DialogTitle, AppBar, Tabs, Tab, Avatar, List, ListItem, ListItemAvatar, ListItemText } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { Container, Grid, TextField, MenuItem, Select, InputLabel, FormControl, Box, Button, Card, CardContent, CardMedia, Typography, Fab, Dialog, DialogContent, DialogTitle, AppBar, Tabs, Tab, Avatar, List, ListItem, ListItemAvatar, ListItemText, FormControlLabel, Checkbox } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 
-const projectsData = [
-  { id: 1, title: 'Proyecto 1', description: 'Descripción del Proyecto 1', image: 'https://via.placeholder.com/150', location: 'Ubicación 1', category: 'Categoría 1', relevance: 'Alta', members: [{ id: 1, name: 'Miembro 1', avatar: 'https://via.placeholder.com/50' }, { id: 2, name: 'Miembro 2', avatar: 'https://via.placeholder.com/50' }] },
-  { id: 2, title: 'Proyecto 2', description: 'Descripción del Proyecto 2', image: 'https://via.placeholder.com/150', location: 'Ubicación 2', category: 'Categoría 2', relevance: 'Media', members: [{ id: 3, name: 'Miembro 3', avatar: 'https://via.placeholder.com/50' }, { id: 4, name: 'Miembro 4', avatar: 'https://via.placeholder.com/50' }] },
-  { id: 3, title: 'Proyecto 3', description: 'Descripción del Proyecto 3', image: 'https://via.placeholder.com/150', location: 'Ubicación 3', category: 'Categoría 3', relevance: 'Media', members: [{ id: 5, name: 'Miembro 5', avatar: 'https://via.placeholder.com/50' }, { id: 6, name: 'Miembro 6', avatar: 'https://via.placeholder.com/50' }] },
-];
+const instance = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:4000', // Cambia este valor por el puerto en el que está corriendo tu backend
+});
 
 const ProjectsSection = () => {
+  const [projects, setProjects] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState({ location: '', category: '', relevance: '' });
   const [open, setOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState(null);
   const [tabValue, setTabValue] = useState(0);
+  const [newProject, setNewProject] = useState({
+    nombre: '',
+    descripcion: '',
+    objetivos: '',
+    actividades_planificadas: '',
+    categoria: '',
+    tipo_cultivo: '',
+    tipo_ganaderia: '',
+    otro: '',
+    ubicacion_departamento: '',
+    ubicacion_municipio: '',
+    ubicacion_region: '',
+    ubicacion_altitud: '',
+    ubicacion_clima: '',
+    ubicacion_coordenadas: '',
+    cuenta_con_terreno: false,
+    terreno_tamano: '',
+    terreno_vias_acceso: '',
+    terreno_acceso_recursos: '',
+    informacion_adicional: '',
+    contacto_nombre: '',
+    contacto_correo: '',
+    contacto_telefono: '',
+    requisitos_participacion: '',
+    experiencia_requerida: '',
+    disponibilidad_tiempo: '',
+    competencias_especificas: '',
+    beneficios_aparcero: '',
+    condiciones_proyecto: '',
+    criterios_seleccion: '',
+    numero_participantes: '',
+    lista_recursos: '',
+    responsabilidades_aparcero: '',
+    colaboradores_buscados: '',
+    fecha_de_inicio: '',
+    fecha_de_fin: '',
+    imagen_representativa: '',
+    documentos_relevantes: '',
+  });
+
+  useEffect(() => {
+    fetchProjects();
+  }, []);
+
+  const fetchProjects = async () => {
+    try {
+      const response = await instance.get('/proyectos', {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      if (Array.isArray(response.data)) {
+        setProjects(response.data);
+      } else {
+        console.error('Unexpected response data:', response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+    }
+  };
 
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
@@ -46,14 +106,36 @@ const ProjectsSection = () => {
     setOpen(true);
   };
 
-  const filteredProjects = projectsData.filter((project) => {
+  const handleInputChange = (event) => {
+    const { name, value, type, checked } = event.target;
+    setNewProject({
+      ...newProject,
+      [name]: type === 'checkbox' ? checked : value,
+    });
+  };
+
+  const handleCreateProject = async () => {
+    try {
+      const response = await instance.post('/proyectos/create', newProject, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      setProjects([...projects, response.data]);
+      handleClose();
+    } catch (error) {
+      console.error('Error creating project:', error);
+    }
+  };
+
+  const filteredProjects = Array.isArray(projects) ? projects.filter((project) => {
     return (
-      project.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      (filters.location ? project.location === filters.location : true) &&
-      (filters.category ? project.category === filters.category : true) &&
-      (filters.relevance ? project.relevance === filters.relevance : true)
+      project.nombre.toLowerCase().includes(searchTerm.toLowerCase()) &&
+      (filters.location ? project.ubicacion_region === filters.location : true) &&
+      (filters.category ? project.categoria === filters.category : true) &&
+      (filters.relevance ? project.relevancia === filters.relevance : true)
     );
-  });
+  }) : [];
 
   return (
     <Container sx={{ marginTop: 4, borderRadius: '16px', padding: 2, backgroundColor: '#f5f5f5', maxWidth: '90%' }}>
@@ -108,7 +190,7 @@ const ProjectsSection = () => {
       </Box>
       <Grid container spacing={2}>
         {filteredProjects.slice(0, 9).map((project) => (
-          <Grid item xs={12} sm={6} md={4} key={project.id}>
+          <Grid item xs={12} sm={6} md={4} key={project.proyecto_id}>
             <Card
               sx={{ borderRadius: '24px', transition: 'transform 0.3s', '&:hover': { transform: 'scale(1.05)' } }}
               onClick={() => handleProjectClick(project)}
@@ -116,15 +198,15 @@ const ProjectsSection = () => {
               <CardMedia
                 component="img"
                 height="140"
-                image={project.image}
-                alt={project.title}
+                image={project.imagen_representativa}
+                alt={project.nombre}
               />
               <CardContent>
                 <Typography gutterBottom variant="h5" component="div">
-                  {project.title}
+                  {project.nombre}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  {project.description}
+                  {project.descripcion}
                 </Typography>
               </CardContent>
             </Card>
@@ -139,15 +221,62 @@ const ProjectsSection = () => {
         <DialogContent>
           <Box component="form" sx={{ display: 'flex', flexDirection: 'row', gap: 2 }}>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1 }}>
-              <TextField label="Título" variant="outlined" fullWidth />
-              <TextField label="Descripción" variant="outlined" fullWidth multiline rows={4} />
-              <TextField label="URL de la Imagen" variant="outlined" fullWidth />
-            </Box>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1 }}>
-              <TextField label="Ubicación" variant="outlined" fullWidth />
-              <TextField label="Categoría" variant="outlined" fullWidth />
-              <TextField label="Relevancia" variant="outlined" fullWidth />
-              <Button variant="contained" color="primary" onClick={handleClose}>Crear</Button>
+              <TextField label="Nombre" variant="outlined" fullWidth name="nombre" value={newProject.nombre} onChange={handleInputChange} />
+              <TextField label="Descripción" variant="outlined" fullWidth multiline rows={4} name="descripcion" value={newProject.descripcion} onChange={handleInputChange} />
+              <TextField label="Objetivos" variant="outlined" fullWidth name="objetivos" value={newProject.objetivos} onChange={handleInputChange} />
+              <TextField label="Actividades Planificadas" variant="outlined" fullWidth name="actividades_planificadas" value={newProject.actividades_planificadas} onChange={handleInputChange} />
+              <TextField label="Categoría" variant="outlined" fullWidth name="categoria" value={newProject.categoria} onChange={handleInputChange} />
+              <TextField label="Tipo de Cultivo" variant="outlined" fullWidth name="tipo_cultivo" value={newProject.tipo_cultivo} onChange={handleInputChange} />
+              <TextField label="Tipo de Ganadería" variant="outlined" fullWidth name="tipo_ganaderia" value={newProject.tipo_ganaderia} onChange={handleInputChange} />
+              <TextField label="Otro" variant="outlined" fullWidth name="otro" value={newProject.otro} onChange={handleInputChange} />
+              <TextField label="Ubicación (Departamento)" variant="outlined" fullWidth name="ubicacion_departamento" value={newProject.ubicacion_departamento} onChange={handleInputChange} />
+              <TextField label="Ubicación (Municipio)" variant="outlined" fullWidth name="ubicacion_municipio" value={newProject.ubicacion_municipio} onChange={handleInputChange} />
+              <TextField label="Ubicación (Región)" variant="outlined" fullWidth name="ubicacion_region" value={newProject.ubicacion_region} onChange={handleInputChange} />
+              <TextField label="Ubicación (Altitud)" variant="outlined" fullWidth name="ubicacion_altitud" value={newProject.ubicacion_altitud} onChange={handleInputChange} />
+              <TextField label="Ubicación (Clima)" variant="outlined" fullWidth name="ubicacion_clima" value={newProject.ubicacion_clima} onChange={handleInputChange} />
+              <TextField label="Ubicación (Coordenadas)" variant="outlined" fullWidth name="ubicacion_coordenadas" value={newProject.ubicacion_coordenadas} onChange={handleInputChange} />
+              <FormControlLabel control={<Checkbox name="cuenta_con_terreno" checked={newProject.cuenta_con_terreno} onChange={handleInputChange} />} label="Cuenta con Terreno" />
+              <TextField label="Tamaño del Terreno" variant="outlined" fullWidth name="terreno_tamano" value={newProject.terreno_tamano} onChange={handleInputChange} />
+              <TextField label="Vías de Acceso al Terreno" variant="outlined" fullWidth name="terreno_vias_acceso" value={newProject.terreno_vias_acceso} onChange={handleInputChange} />
+              <TextField label="Acceso a Recursos del Terreno" variant="outlined" fullWidth name="terreno_acceso_recursos" value={newProject.terreno_acceso_recursos} onChange={handleInputChange} />
+              <TextField label="Información Adicional" variant="outlined" fullWidth name="informacion_adicional" value={newProject.informacion_adicional} onChange={handleInputChange} />
+              <TextField label="Nombre de Contacto" variant="outlined" fullWidth name="contacto_nombre" value={newProject.contacto_nombre} onChange={handleInputChange} />
+              <TextField label="Correo de Contacto" variant="outlined" fullWidth name="contacto_correo" value={newProject.contacto_correo} onChange={handleInputChange} />
+              <TextField label="Teléfono de Contacto" variant="outlined" fullWidth name="contacto_telefono" value={newProject.contacto_telefono} onChange={handleInputChange} />
+              <TextField label="Requisitos de Participación" variant="outlined" fullWidth name="requisitos_participacion" value={newProject.requisitos_participacion} onChange={handleInputChange} />
+              <TextField label="Experiencia Requerida" variant="outlined" fullWidth name="experiencia_requerida" value={newProject.experiencia_requerida} onChange={handleInputChange} />
+              <TextField label="Disponibilidad de Tiempo" variant="outlined" fullWidth name="disponibilidad_tiempo" value={newProject.disponibilidad_tiempo} onChange={handleInputChange} />
+              <TextField label="Competencias Específicas" variant="outlined" fullWidth name="competencias_especificas" value={newProject.competencias_especificas} onChange={handleInputChange} />
+              <TextField label="Beneficios para el Aparcero" variant="outlined" fullWidth name="beneficios_aparcero" value={newProject.beneficios_aparcero} onChange={handleInputChange} />
+              <TextField label="Condiciones del Proyecto" variant="outlined" fullWidth name="condiciones_proyecto" value={newProject.condiciones_proyecto} onChange={handleInputChange} />
+              <TextField label="Criterios de Selección" variant="outlined" fullWidth name="criterios_seleccion" value={newProject.criterios_seleccion} onChange={handleInputChange} />
+              <TextField label="Número de Participantes" variant="outlined" fullWidth name="numero_participantes" value={newProject.numero_participantes} onChange={handleInputChange} />
+              <TextField label="Lista de Recursos" variant="outlined" fullWidth name="lista_recursos" value={newProject.lista_recursos} onChange={handleInputChange} />
+              <TextField label="Responsabilidades del Aparcero" variant="outlined" fullWidth name="responsabilidades_aparcero" value={newProject.responsabilidades_aparcero} onChange={handleInputChange} />
+              <TextField label="Colaboradores Buscados" variant="outlined" fullWidth name="colaboradores_buscados" value={newProject.colaboradores_buscados} onChange={handleInputChange} />
+              <TextField
+                label="Fecha de Inicio"
+                variant="outlined"
+                fullWidth
+                type="date"
+                InputLabelProps={{ shrink: true }}
+                name="fecha_de_inicio"
+                value={newProject.fecha_de_inicio}
+                onChange={handleInputChange}
+              />
+              <TextField
+                label="Fecha de Fin"
+                variant="outlined"
+                fullWidth
+                type="date"
+                InputLabelProps={{ shrink: true }}
+                name="fecha_de_fin"
+                value={newProject.fecha_de_fin}
+                onChange={handleInputChange}
+              />
+              <TextField label="Imagen Representativa" variant="outlined" fullWidth name="imagen_representativa" value={newProject.imagen_representativa} onChange={handleInputChange} />
+              <TextField label="Documentos Relevantes" variant="outlined" fullWidth name="documentos_relevantes" value={newProject.documentos_relevantes} onChange={handleInputChange} />
+              <Button variant="contained" color="primary" onClick={handleCreateProject}>Crear</Button>
             </Box>
           </Box>
         </DialogContent>
@@ -162,13 +291,13 @@ const ProjectsSection = () => {
           PaperProps={{ sx: { borderRadius: '16px' } }}
         >
           <DialogTitle sx={{ textAlign: 'center' }}>
-            <Typography variant="h4">{selectedProject.title}</Typography>
+            <Typography variant="h4">{selectedProject.nombre}</Typography>
           </DialogTitle>
           <DialogContent>
             <Box sx={{ textAlign: 'center', mb: 2 }}>
               <Avatar
-                src={selectedProject.image}
-                alt={selectedProject.title}
+                src={selectedProject.imagen_representativa}
+                alt={selectedProject.nombre}
                 sx={{ width: 150, height: 150, margin: 'auto', borderRadius: '50%' }}
               />
             </Box>
@@ -182,16 +311,16 @@ const ProjectsSection = () => {
             {tabValue === 0 && (
               <Box sx={{ p: 2 }}>
                 <Typography variant="body1" gutterBottom>
-                  {selectedProject.description}
+                  {selectedProject.descripcion}
                 </Typography>
                 <Typography variant="body2" color="textSecondary">
-                  <strong>Ubicación:</strong> {selectedProject.location}
+                  <strong>Ubicación:</strong> {selectedProject.ubicacion_region}
                 </Typography>
                 <Typography variant="body2" color="textSecondary">
-                  <strong>Categoría:</strong> {selectedProject.category}
+                  <strong>Categoría:</strong> {selectedProject.categoria}
                 </Typography>
                 <Typography variant="body2" color="textSecondary">
-                  <strong>Relevancia:</strong> {selectedProject.relevance}
+                  <strong>Relevancia:</strong> {selectedProject.relevancia}
                 </Typography>
               </Box>
             )}

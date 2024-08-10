@@ -25,15 +25,14 @@ import ChatSidebar from './sections/ChatSidebar';  // Import the ChatSidebar com
 const drawerWidth = 280;
 
 const sections = [
-  { id: 'profile', icon: <AssignmentIcon />, label: 'Profile' },
-  { id: 'projects', icon: <ExploreIcon />, label: 'Projects' },
-  { id: 'messages', icon: <MailIcon />, label: 'Messages' },
-  { id: 'groups', icon: <GroupIcon />, label: 'Groups' },
-  { id: 'resources', icon: <SchoolIcon />, label: 'Resources' },
-  { id: 'achievements', icon: <StarIcon />, label: 'Achievements' },
-  { id: 'forum', icon: <ForumIcon />, label: 'Forum' },
-  { id: 'events', icon: <EventIcon />, label: 'Events' },
-  { id: 'feed', icon: <ExploreIcon />, label: 'Feed' }, // Adding a new section for the feed
+  { id: 'profile', icon: <AssignmentIcon />, label: 'Perfil' },
+  { id: 'projects', icon: <ExploreIcon />, label: 'Proyectos' },
+  { id: 'groups', icon: <GroupIcon />, label: 'Grupos' },
+  { id: 'resources', icon: <SchoolIcon />, label: 'Recursos' },
+  { id: 'achievements', icon: <StarIcon />, label: 'Logros' },
+  { id: 'forum', icon: <ForumIcon />, label: 'Foro' },
+  { id: 'events', icon: <EventIcon />, label: 'Eventos' },
+  { id: 'feed', icon: <ExploreIcon />, label: 'Novedades' }, // Adding a new section for the feed
 ];
 
 const AdminPage = () => {
@@ -71,9 +70,9 @@ const AdminPage = () => {
         }}
       >
         <Box display="flex" flexDirection="column" alignItems="center" mb={2}>
-          <Avatar src="https://via.placeholder.com/100" alt="Admin User" sx={{ width: 100, height: 100, mb: 1 }} />
-          <Typography variant="h6">Admin User</Typography>
-          <Typography variant="body2" color="textSecondary">Administrator</Typography>
+          <Avatar src="" alt="Admin User" sx={{ width: 100, height: 100, mb: 1 }} />
+          <Typography variant="h6">Juan David Gallego</Typography>
+          <Typography variant="body2" color="textSecondary">Usuario</Typography>
         </Box>
         <Divider />
         <List>
@@ -100,13 +99,13 @@ const AdminPage = () => {
           ))}
         </List>
       </Drawer>
-      <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+      <Box component="main" sx={{ flexGrow: 1, p: 3, width: { sm: `calc(100% - ${drawerWidth}px)` } }}>
         <AppBar 
           position="static" 
           color="default" 
           sx={{ 
             mb: 3, 
-            boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)',  // Añadido un ligero boxShadow
+            boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)', 
             borderBottom: `1px solid ${theme.palette.divider}` 
           }}
         >
@@ -131,13 +130,12 @@ const AdminPage = () => {
         </AppBar>
         {activeSection === 'profile' && <ProfileSection />}
         {activeSection === 'projects' && <ProjectsSection />}
-        {activeSection === 'messages' && <ChatsSection />}
         {activeSection === 'groups' && <GroupsSection />}
         {activeSection === 'resources' && <ResourcesSection />}
         {activeSection === 'achievements' && <AchievementsSection />}
         {activeSection === 'forum' && <ForumSection />}
         {activeSection === 'events' && <EventsSection />}
-        {activeSection === 'feed' && <Feed />} {/* Render the feed when the feed section is active */}
+        {activeSection === 'feed' && <Feed />}
       </Box>
       <ChatSidebar open={chatSidebarOpen} handleClose={handleMessagesClose} />
     </Box>

@@ -4,8 +4,8 @@ import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
 import axios from 'axios';
 
-const API_URL = `${import.meta.env.VITE_API_URL}/users/me`;
-const UPDATE_PROFILE_URL = `${import.meta.env.VITE_API_URL}/users/me`;
+const API_URL = `${import.meta.env.VITE_API_URL}/profile/me`;
+const UPDATE_PROFILE_URL = `${import.meta.env.VITE_API_URL}/profile/me`;
 
 const initialProfile = {
   nombre: '',
@@ -23,16 +23,13 @@ const ProfileSection = () => {
   const token = localStorage.getItem('token'); // Asegúrate de manejar correctamente el token de autenticación
 
   useEffect(() => {
-    console.log("API URL:", API_URL); // Verifica que la variable de entorno se esté cargando correctamente
     const fetchProfile = async () => {
-      console.log('Fetching profile with token:', token);
       try {
         const response = await axios.get(API_URL, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
-        console.log('Profile fetched successfully:', response.data);
         const profileData = {
           ...response.data,
           avatar: response.data.avatar ? `data:image/jpeg;base64,${response.data.avatar}` : '',
@@ -52,7 +49,6 @@ const ProfileSection = () => {
   };
 
   const handleSave = async () => {
-    console.log('Saving profile settings:', profileSettings);
     try {
       const formData = new FormData();
       formData.append('nombre', profileSettings.nombre);
@@ -70,7 +66,6 @@ const ProfileSection = () => {
           'Content-Type': 'multipart/form-data',
         },
       });
-      console.log('Profile updated successfully:', response.data);
       const profileData = {
         ...response.data,
         avatar: response.data.avatar ? `data:image/jpeg;base64,${response.data.avatar}` : '',
@@ -85,12 +80,16 @@ const ProfileSection = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    console.log(`Changing profile setting ${name} to ${value}`);
     setProfileSettings({ ...profileSettings, [name]: value });
   };
 
   const handleAvatarChange = (e) => {
     setAvatarFile(e.target.files[0]);
+  };
+
+  const validateBase64Image = (base64String) => {
+    const regex = /^data:image\/(?:jpeg|jpg|png);base64,/;
+    return regex.test(base64String);
   };
 
   return (
@@ -99,7 +98,7 @@ const ProfileSection = () => {
         <CardContent>
           <Box display="flex" flexDirection="column" alignItems="center">
             <Avatar
-              src={profile.avatar || 'https://via.placeholder.com/150'}
+              src={validateBase64Image(profile.avatar) ? profile.avatar : 'https://via.placeholder.com/150'}
               alt="Profile Picture"
               sx={{ width: 120, height: 120, border: '4px solid', borderColor: 'primary.main', mb: 2 }}
             />
@@ -114,7 +113,7 @@ const ProfileSection = () => {
               sx={{ mt: 2 }}
               onClick={handleEdit}
             >
-              Edit Profile
+              Editar Perfil
             </Button>
           </Box>
         </CardContent>
@@ -123,7 +122,7 @@ const ProfileSection = () => {
       {isEditing && (
         <Card>
           <CardContent>
-            <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 2, textAlign: 'center' }}>Profile Settings</Typography>
+            <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 2, textAlign: 'center' }}>Configuración del Perfil</Typography>
             <Grid container spacing={3}>
               <Grid item xs={12}>
                 <TextField
@@ -171,7 +170,7 @@ const ProfileSection = () => {
                   startIcon={<SaveIcon />}
                   onClick={handleSave}
                 >
-                  Save Changes
+                  Guardar Cambios
                 </Button>
               </Grid>
             </Grid>

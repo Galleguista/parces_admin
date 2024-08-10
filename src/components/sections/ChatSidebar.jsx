@@ -15,7 +15,8 @@ const ChatSidebar = ({ open, handleClose, chatId }) => {
 
   const fetchMessages = async (chatId) => {
     try {
-      const response = await axios.get(`${import.meta.env.VITE_API_URL}/chat/mensajes/${chatId}`, {
+      console.log('Fetching messages for chat:', chatId);
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/chat/${chatId}/messages`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
@@ -28,11 +29,14 @@ const ChatSidebar = ({ open, handleClose, chatId }) => {
 
   const handleSendMessage = async () => {
     if (newMessage.trim() === '') return;
-
+  
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/chat/${chatId}/mensajes`,
-        { contenido: newMessage },
+        `${import.meta.env.VITE_API_URL}/chat/${chatId}/messages`,
+        {
+          contenido: newMessage,
+          usuario_id: localStorage.getItem('usuario_id'),
+        },
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -44,7 +48,7 @@ const ChatSidebar = ({ open, handleClose, chatId }) => {
     } catch (error) {
       console.error('Error sending message:', error);
     }
-  };
+  };  
 
   return (
     <Drawer
@@ -70,7 +74,7 @@ const ChatSidebar = ({ open, handleClose, chatId }) => {
         <Divider />
         <List>
           {messages.map((message) => (
-            <ListItem key={message.chat_id} sx={{ borderRadius: 1 }}>
+            <ListItem key={message.mensaje_id} sx={{ borderRadius: 1 }}>
               <ListItemAvatar>
                 <Avatar src={message.usuario?.avatar ? `data:image/jpeg;base64,${message.usuario.avatar}` : 'https://via.placeholder.com/40'} />
               </ListItemAvatar>
@@ -82,7 +86,7 @@ const ChatSidebar = ({ open, handleClose, chatId }) => {
           <TextField
             fullWidth
             variant="outlined"
-            placeholder="Type a message..."
+            placeholder="Escribe un mensaje..."
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
           />

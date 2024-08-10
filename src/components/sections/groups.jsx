@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Grid, Card, CardContent, Typography, Avatar, Button, Dialog, DialogTitle, DialogContent, List, ListItem, ListItemAvatar, ListItemText, Box, AppBar, Tabs, Tab, Divider, TextField, IconButton, Fab, DialogActions, Drawer
+  Grid, Card, CardContent, Typography, Avatar, Button, Dialog, DialogTitle, DialogContent, List, ListItem, ListItemAvatar, ListItemText, Box, AppBar, Tabs, Tab, Divider, TextField, IconButton, Fab, DialogActions, Drawer, Checkbox, FormControlLabel
 } from '@mui/material';
 import GroupIcon from '@mui/icons-material/Group';
 import AddIcon from '@mui/icons-material/Add';
@@ -25,9 +25,12 @@ const GroupsSection = () => {
   const [newMessage, setNewMessage] = useState('');
   const [newMemberId, setNewMemberId] = useState('');
   const [selectedUserId, setSelectedUserId] = useState('');
+  const [usuarios, setUsuarios] = useState([]);
+  const [selectedUsuarios, setSelectedUsuarios] = useState([]);
 
   useEffect(() => {
     fetchGroups();
+    fetchUsuarios();
   }, []);
 
   const fetchGroups = async () => {
@@ -40,6 +43,19 @@ const GroupsSection = () => {
       setGroups(response.data);
     } catch (error) {
       console.error('Error fetching groups:', error);
+    }
+  };
+
+  const fetchUsuarios = async () => {
+    try {
+      const response = await instance.get('/usuarios', {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      setUsuarios(response.data);
+    } catch (error) {
+      console.error('Error fetching usuarios:', error);
     }
   };
 
@@ -61,11 +77,15 @@ const GroupsSection = () => {
 
   const handleJoinGroupChat = async (groupId) => {
     try {
-      await instance.post(`/grupos/${groupId}/miembros`, {}, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
+      const response = await instance.post(
+        `/grupos/${groupId}/miembros`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        }
+      );
       setChatId(groupId);
       setIsChatOpen(true);
       handleCloseGroup();
@@ -80,24 +100,25 @@ const GroupsSection = () => {
       const response = await instance.post('/grupos/create', {
         nombre: newGroupName,
         descripcion: newGroupDescription,
+        usuarios: selectedUsuarios,
       }, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
       });
-      await instance.post(`/grupos/${response.data.grupo_id}/miembros`, {}, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
+      console.log('Creating group chat response:', response.data); // Añadir log para verificar la respuesta
       setGroups([...groups, response.data]);
       setIsCreateDialogOpen(false);
       setNewGroupName('');
       setNewGroupDescription('');
+      setSelectedUsuarios([]);
     } catch (error) {
       console.error('Error creating group:', error);
+      console.error('Response data:', error.response.data); // Añadir log para verificar los datos de la respuesta
     }
   };
+  
+  
 
   const handleOpenCreateDialog = () => {
     setIsCreateDialogOpen(true);
@@ -109,7 +130,7 @@ const GroupsSection = () => {
 
   const fetchMessages = async (chatId) => {
     try {
-      const response = await instance.get(`/chats/${chatId}/messages`, {
+      const response = await instance.get(`/chat/${chatId}/messages`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
@@ -121,20 +142,25 @@ const GroupsSection = () => {
   };
 
   const handleSendMessage = async () => {
-    if (newMessage.trim()) {
-      try {
-        const response = await instance.post(`/chats/${chatId}/messages`, {
+    if (newMessage.trim() === '') return;
+
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/chat/${chatId}/messages`,
+        {
           contenido: newMessage,
-        }, {
+          usuario_id: localStorage.getItem('usuario_id'), // Obtener usuario_id del almacenamiento local
+        },
+        {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
           },
-        });
-        setMessages([...messages, response.data]);
-        setNewMessage('');
-      } catch (error) {
-        console.error('Error sending message:', error);
-      }
+        }
+      );
+      setMessages([...messages, response.data]);
+      setNewMessage('');
+    } catch (error) {
+      console.error('Error sending message:', error);
     }
   };
 
@@ -158,7 +184,7 @@ const GroupsSection = () => {
 
   const handleStartPrivateChat = async (receptorId) => {
     try {
-      const response = await instance.post('/grupos/chats/private', { receptorId }, {
+      const response = await instance.post('/chat/private', { receptorId }, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
@@ -169,6 +195,14 @@ const GroupsSection = () => {
     } catch (error) {
       console.error('Error starting private chat:', error);
     }
+  };
+
+  const handleSelectUsuario = (usuarioId) => {
+    setSelectedUsuarios(prevSelected =>
+      prevSelected.includes(usuarioId)
+        ? prevSelected.filter(id => id !== usuarioId)
+        : [...prevSelected, usuarioId]
+    );
   };
 
   return (
@@ -335,6 +369,23 @@ const GroupsSection = () => {
             value={newGroupDescription}
             onChange={(e) => setNewGroupDescription(e.target.value)}
           />
+          <Divider sx={{ my: 2 }} />
+          <Typography variant="body1">Selecciona los miembros:</Typography>
+          <List>
+            {usuarios.map((usuario) => (
+              <ListItem key={usuario.usuario_id}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={selectedUsuarios.includes(usuario.usuario_id)}
+                      onChange={() => handleSelectUsuario(usuario.usuario_id)}
+                    />
+                  }
+                  label={usuario.nombre}
+                />
+              </ListItem>
+            ))}
+          </List>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseCreateDialog}>Cancelar</Button>

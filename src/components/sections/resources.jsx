@@ -1,43 +1,44 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import {
   Grid, Card, CardContent, Typography, Button, Dialog, DialogTitle, DialogContent, DialogActions,
-  TextField, IconButton, ListItemAvatar, Avatar, Box
+  TextField, IconButton, ListItemAvatar, Avatar, Box, Input
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import BookIcon from '@mui/icons-material/Book';
 
-const initialResources = [
-  {
-    id: 1,
-    title: 'Introduction to Farming',
-    description: 'A comprehensive guide to farming practices.',
-    image: 'https://via.placeholder.com/300x200',
-  },
-  {
-    id: 2,
-    title: 'Urban Gardening Tips',
-    description: 'Tips and tricks for successful urban gardening.',
-    image: 'https://via.placeholder.com/300x200',
-  },
-  {
-    id: 3,
-    title: 'Sustainable Agriculture',
-    description: 'Promoting sustainable agricultural practices.',
-    image: 'https://via.placeholder.com/300x200',
-  },
-];
+const instance = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:4000',
+});
 
 const ResourcesSection = () => {
-  const [resources, setResources] = useState(initialResources);
+  const [resources, setResources] = useState([]);
   const [selectedResource, setSelectedResource] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
-  const [resourceData, setResourceData] = useState({ id: null, title: '', description: '', image: '' });
+  const [resourceData, setResourceData] = useState({ id: null, nombre: '', descripcion: '', imagen: null, pdf: null });
+
+  useEffect(() => {
+    fetchResources();
+  }, []);
+
+  const fetchResources = async () => {
+    try {
+      const response = await instance.get('/recursos', {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      setResources(response.data);
+    } catch (error) {
+      console.error('Error fetching resources:', error);
+    }
+  };
 
   const handleOpenDialog = (resource = null) => {
     setSelectedResource(resource);
-    setResourceData(resource || { id: null, title: '', description: '', image: '' });
+    setResourceData(resource || { id: null, nombre: '', descripcion: '', imagen: null, pdf: null });
     setOpenDialog(true);
   };
 
@@ -45,17 +46,56 @@ const ResourcesSection = () => {
     setOpenDialog(false);
   };
 
-  const handleSaveResource = () => {
-    if (selectedResource) {
-      setResources(resources.map((res) => (res.id === selectedResource.id ? resourceData : res)));
+  const handleInputChange = (e) => {
+    const { name, value, files } = e.target;
+    if (name === 'imagen' || name === 'pdf') {
+      setResourceData({ ...resourceData, [name]: files[0] });
     } else {
-      setResources([...resources, { ...resourceData, id: Date.now() }]);
+      setResourceData({ ...resourceData, [name]: value });
     }
-    setOpenDialog(false);
   };
 
-  const handleDeleteResource = (id) => {
-    setResources(resources.filter((resource) => resource.id !== id));
+  const handleSaveResource = async () => {
+    const formData = new FormData();
+    formData.append('nombre', resourceData.nombre);
+    formData.append('descripcion', resourceData.descripcion);
+    if (resourceData.imagen) formData.append('imagen', resourceData.imagen);
+    if (resourceData.pdf) formData.append('pdf', resourceData.pdf);
+
+    try {
+      if (selectedResource) {
+        await instance.put(`/recursos/${selectedResource.recurso_id}`, formData, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+      } else {
+        await instance.post('/recursos/create', formData, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+      }
+      fetchResources();
+      setOpenDialog(false);
+    } catch (error) {
+      console.error('Error saving resource:', error);
+    }
+  };
+
+  const handleDeleteResource = async (id) => {
+    try {
+      await instance.delete(`/recursos/${id}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      fetchResources();
+    } catch (error) {
+      console.error('Error deleting resource:', error);
+    }
   };
 
   return (
@@ -68,13 +108,13 @@ const ResourcesSection = () => {
       </Box>
       <Grid container spacing={3}>
         {resources.map((resource) => (
-          <Grid item xs={12} sm={6} md={4} key={resource.id}>
+          <Grid item xs={12} sm={6} md={4} key={resource.recurso_id}>
             <Card sx={{ borderRadius: '16px', boxShadow: 3 }}>
               <CardContent>
                 <Box
                   component="img"
-                  src={resource.image}
-                  alt={resource.title}
+                  src={resource.imagen_url}
+                  alt={resource.nombre}
                   sx={{ width: '100%', height: 140, borderRadius: '16px', mb: 2 }}
                 />
                 <Box display="flex" alignItems="center" mb={2}>
@@ -82,15 +122,15 @@ const ResourcesSection = () => {
                     <BookIcon />
                   </Avatar>
                   <Box>
-                    <Typography variant="h6" sx={{ fontWeight: 'bold' }}>{resource.title}</Typography>
-                    <Typography variant="body2" color="textSecondary">{resource.description}</Typography>
+                    <Typography variant="h6" sx={{ fontWeight: 'bold' }}>{resource.nombre}</Typography>
+                    <Typography variant="body2" color="textSecondary">{resource.descripcion}</Typography>
                   </Box>
                 </Box>
                 <Box display="flex" justifyContent="space-between">
                   <IconButton color="primary" onClick={() => handleOpenDialog(resource)}>
                     <EditIcon />
                   </IconButton>
-                  <IconButton color="secondary" onClick={() => handleDeleteResource(resource.id)}>
+                  <IconButton color="secondary" onClick={() => handleDeleteResource(resource.recurso_id)}>
                     <DeleteIcon />
                   </IconButton>
                 </Box>
@@ -105,27 +145,35 @@ const ResourcesSection = () => {
         <DialogContent>
           <TextField
             margin="dense"
-            label="Title"
+            label="Nombre"
             type="text"
             fullWidth
-            value={resourceData.title}
-            onChange={(e) => setResourceData({ ...resourceData, title: e.target.value })}
+            name="nombre"
+            value={resourceData.nombre}
+            onChange={handleInputChange}
           />
           <TextField
             margin="dense"
-            label="Description"
+            label="Descripción"
             type="text"
             fullWidth
-            value={resourceData.description}
-            onChange={(e) => setResourceData({ ...resourceData, description: e.target.value })}
+            name="descripcion"
+            value={resourceData.descripcion}
+            onChange={handleInputChange}
           />
-          <TextField
+          <Input
             margin="dense"
-            label="Image URL"
-            type="text"
+            type="file"
             fullWidth
-            value={resourceData.image}
-            onChange={(e) => setResourceData({ ...resourceData, image: e.target.value })}
+            name="imagen"
+            onChange={handleInputChange}
+          />
+          <Input
+            margin="dense"
+            type="file"
+            fullWidth
+            name="pdf"
+            onChange={handleInputChange}
           />
         </DialogContent>
         <DialogActions>

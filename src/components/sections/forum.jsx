@@ -11,8 +11,7 @@ const initialForums = [
     title: 'Organic Farming Techniques',
     description: 'Discuss the best techniques for organic farming.',
     messages: [
-      { id: 1, sender: 'Alice Smith', message: 'What are the best practices for pest control?', time: '10:30 AM' },
-      { id: 2, sender: 'Bob Johnson', message: 'I use neem oil and it works great.', time: '10:32 AM' },
+    
     ],
   },
   {
@@ -20,8 +19,7 @@ const initialForums = [
     title: 'Urban Gardening',
     description: 'Share your tips and tricks for urban gardening.',
     messages: [
-      { id: 1, sender: 'Carol Williams', message: 'What plants are best for small spaces?', time: '9:00 AM' },
-      { id: 2, sender: 'David Brown', message: 'I recommend succulents and herbs.', time: '9:05 AM' },
+   
     ],
   },
   {
@@ -29,8 +27,7 @@ const initialForums = [
     title: 'Sustainable Agriculture',
     description: 'Discuss sustainable agricultural practices.',
     messages: [
-      { id: 1, sender: 'Eve Davis', message: 'How can we reduce water usage in farming?', time: '11:00 AM' },
-      { id: 2, sender: 'Frank Miller', message: 'Drip irrigation is a great way to save water.', time: '11:05 AM' },
+     
     ],
   },
 ];

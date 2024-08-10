@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { Container, Box, Card, CardContent, TextField, Button, Typography, Avatar, CssBaseline } from '@mui/material';
+import { Container, Box, Card, CardContent, TextField, Button, Typography, Avatar, CssBaseline, Link } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import axios from 'axios';
 
 const theme = createTheme();
 
-const LoginPage = ({ onLogin }) => {
+const LoginPage = ({ onLogin, onShowRegister }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
@@ -89,6 +89,9 @@ const LoginPage = ({ onLogin }) => {
                   >
                     Login
                   </Button>
+                  <Link href="#" variant="body2" onClick={onShowRegister}>
+                    {"Don't have an account? Create one"}
+                  </Link>
                 </Box>
               </Box>
             </CardContent>
