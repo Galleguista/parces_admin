@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Container, Grid, TextField, MenuItem, Select, InputLabel, FormControl, Box, Button, Card, CardContent, CardMedia, Typography, Fab, Dialog, DialogContent, DialogTitle, AppBar, Tabs, Tab, Avatar, List, ListItem, ListItemAvatar, ListItemText, FormControlLabel, Checkbox } from '@mui/material';
+import { Container, Grid, TextField, MenuItem, Select, InputLabel, FormControl, Box, Button, Card, CardContent, CardMedia, Typography, Fab, Dialog, DialogContent, DialogTitle, AppBar, Tabs, Tab, Accordion, AccordionSummary, AccordionDetails, FormControlLabel, Checkbox } from '@mui/material';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import AddIcon from '@mui/icons-material/Add';
 
 const instance = axios.create({
@@ -219,65 +220,107 @@ const ProjectsSection = () => {
       <Dialog open={open} onClose={handleClose} PaperProps={{ sx: { borderRadius: '24px', width: '80%' } }}>
         <DialogTitle>Crear Nuevo Proyecto</DialogTitle>
         <DialogContent>
-          <Box component="form" sx={{ display: 'flex', flexDirection: 'row', gap: 2 }}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1 }}>
-              <TextField label="Nombre" variant="outlined" fullWidth name="nombre" value={newProject.nombre} onChange={handleInputChange} />
-              <TextField label="Descripción" variant="outlined" fullWidth multiline rows={4} name="descripcion" value={newProject.descripcion} onChange={handleInputChange} />
-              <TextField label="Objetivos" variant="outlined" fullWidth name="objetivos" value={newProject.objetivos} onChange={handleInputChange} />
-              <TextField label="Actividades Planificadas" variant="outlined" fullWidth name="actividades_planificadas" value={newProject.actividades_planificadas} onChange={handleInputChange} />
-              <TextField label="Categoría" variant="outlined" fullWidth name="categoria" value={newProject.categoria} onChange={handleInputChange} />
-              <TextField label="Tipo de Cultivo" variant="outlined" fullWidth name="tipo_cultivo" value={newProject.tipo_cultivo} onChange={handleInputChange} />
-              <TextField label="Tipo de Ganadería" variant="outlined" fullWidth name="tipo_ganaderia" value={newProject.tipo_ganaderia} onChange={handleInputChange} />
-              <TextField label="Otro" variant="outlined" fullWidth name="otro" value={newProject.otro} onChange={handleInputChange} />
-              <TextField label="Ubicación (Departamento)" variant="outlined" fullWidth name="ubicacion_departamento" value={newProject.ubicacion_departamento} onChange={handleInputChange} />
-              <TextField label="Ubicación (Municipio)" variant="outlined" fullWidth name="ubicacion_municipio" value={newProject.ubicacion_municipio} onChange={handleInputChange} />
-              <TextField label="Ubicación (Región)" variant="outlined" fullWidth name="ubicacion_region" value={newProject.ubicacion_region} onChange={handleInputChange} />
-              <TextField label="Ubicación (Altitud)" variant="outlined" fullWidth name="ubicacion_altitud" value={newProject.ubicacion_altitud} onChange={handleInputChange} />
-              <TextField label="Ubicación (Clima)" variant="outlined" fullWidth name="ubicacion_clima" value={newProject.ubicacion_clima} onChange={handleInputChange} />
-              <TextField label="Ubicación (Coordenadas)" variant="outlined" fullWidth name="ubicacion_coordenadas" value={newProject.ubicacion_coordenadas} onChange={handleInputChange} />
-              <FormControlLabel control={<Checkbox name="cuenta_con_terreno" checked={newProject.cuenta_con_terreno} onChange={handleInputChange} />} label="Cuenta con Terreno" />
-              <TextField label="Tamaño del Terreno" variant="outlined" fullWidth name="terreno_tamano" value={newProject.terreno_tamano} onChange={handleInputChange} />
-              <TextField label="Vías de Acceso al Terreno" variant="outlined" fullWidth name="terreno_vias_acceso" value={newProject.terreno_vias_acceso} onChange={handleInputChange} />
-              <TextField label="Acceso a Recursos del Terreno" variant="outlined" fullWidth name="terreno_acceso_recursos" value={newProject.terreno_acceso_recursos} onChange={handleInputChange} />
-              <TextField label="Información Adicional" variant="outlined" fullWidth name="informacion_adicional" value={newProject.informacion_adicional} onChange={handleInputChange} />
-              <TextField label="Nombre de Contacto" variant="outlined" fullWidth name="contacto_nombre" value={newProject.contacto_nombre} onChange={handleInputChange} />
-              <TextField label="Correo de Contacto" variant="outlined" fullWidth name="contacto_correo" value={newProject.contacto_correo} onChange={handleInputChange} />
-              <TextField label="Teléfono de Contacto" variant="outlined" fullWidth name="contacto_telefono" value={newProject.contacto_telefono} onChange={handleInputChange} />
-              <TextField label="Requisitos de Participación" variant="outlined" fullWidth name="requisitos_participacion" value={newProject.requisitos_participacion} onChange={handleInputChange} />
-              <TextField label="Experiencia Requerida" variant="outlined" fullWidth name="experiencia_requerida" value={newProject.experiencia_requerida} onChange={handleInputChange} />
-              <TextField label="Disponibilidad de Tiempo" variant="outlined" fullWidth name="disponibilidad_tiempo" value={newProject.disponibilidad_tiempo} onChange={handleInputChange} />
-              <TextField label="Competencias Específicas" variant="outlined" fullWidth name="competencias_especificas" value={newProject.competencias_especificas} onChange={handleInputChange} />
-              <TextField label="Beneficios para el Aparcero" variant="outlined" fullWidth name="beneficios_aparcero" value={newProject.beneficios_aparcero} onChange={handleInputChange} />
-              <TextField label="Condiciones del Proyecto" variant="outlined" fullWidth name="condiciones_proyecto" value={newProject.condiciones_proyecto} onChange={handleInputChange} />
-              <TextField label="Criterios de Selección" variant="outlined" fullWidth name="criterios_seleccion" value={newProject.criterios_seleccion} onChange={handleInputChange} />
-              <TextField label="Número de Participantes" variant="outlined" fullWidth name="numero_participantes" value={newProject.numero_participantes} onChange={handleInputChange} />
-              <TextField label="Lista de Recursos" variant="outlined" fullWidth name="lista_recursos" value={newProject.lista_recursos} onChange={handleInputChange} />
-              <TextField label="Responsabilidades del Aparcero" variant="outlined" fullWidth name="responsabilidades_aparcero" value={newProject.responsabilidades_aparcero} onChange={handleInputChange} />
-              <TextField label="Colaboradores Buscados" variant="outlined" fullWidth name="colaboradores_buscados" value={newProject.colaboradores_buscados} onChange={handleInputChange} />
-              <TextField
-                label="Fecha de Inicio"
-                variant="outlined"
-                fullWidth
-                type="date"
-                InputLabelProps={{ shrink: true }}
-                name="fecha_de_inicio"
-                value={newProject.fecha_de_inicio}
-                onChange={handleInputChange}
-              />
-              <TextField
-                label="Fecha de Fin"
-                variant="outlined"
-                fullWidth
-                type="date"
-                InputLabelProps={{ shrink: true }}
-                name="fecha_de_fin"
-                value={newProject.fecha_de_fin}
-                onChange={handleInputChange}
-              />
-              <TextField label="Imagen Representativa" variant="outlined" fullWidth name="imagen_representativa" value={newProject.imagen_representativa} onChange={handleInputChange} />
-              <TextField label="Documentos Relevantes" variant="outlined" fullWidth name="documentos_relevantes" value={newProject.documentos_relevantes} onChange={handleInputChange} />
-              <Button variant="contained" color="primary" onClick={handleCreateProject}>Crear</Button>
-            </Box>
+          <Box component="form" sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Accordion>
+              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                <Typography>Información General</Typography>
+              </AccordionSummary>
+              <AccordionDetails sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <TextField label="Nombre" variant="outlined" fullWidth name="nombre" value={newProject.nombre} onChange={handleInputChange} />
+                <TextField label="Descripción" variant="outlined" fullWidth multiline rows={4} name="descripcion" value={newProject.descripcion} onChange={handleInputChange} />
+                <TextField label="Objetivos" variant="outlined" fullWidth name="objetivos" value={newProject.objetivos} onChange={handleInputChange} />
+                <TextField label="Actividades Planificadas" variant="outlined" fullWidth name="actividades_planificadas" value={newProject.actividades_planificadas} onChange={handleInputChange} />
+                <TextField label="Categoría" variant="outlined" fullWidth name="categoria" value={newProject.categoria} onChange={handleInputChange} />
+              </AccordionDetails>
+            </Accordion>
+
+            <Accordion>
+              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                <Typography>Ubicación</Typography>
+              </AccordionSummary>
+              <AccordionDetails sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <TextField label="Ubicación (Departamento)" variant="outlined" fullWidth name="ubicacion_departamento" value={newProject.ubicacion_departamento} onChange={handleInputChange} />
+                <TextField label="Ubicación (Municipio)" variant="outlined" fullWidth name="ubicacion_municipio" value={newProject.ubicacion_municipio} onChange={handleInputChange} />
+                <TextField label="Ubicación (Región)" variant="outlined" fullWidth name="ubicacion_region" value={newProject.ubicacion_region} onChange={handleInputChange} />
+                <TextField label="Ubicación (Altitud)" variant="outlined" fullWidth name="ubicacion_altitud" value={newProject.ubicacion_altitud} onChange={handleInputChange} />
+                <TextField label="Ubicación (Clima)" variant="outlined" fullWidth name="ubicacion_clima" value={newProject.ubicacion_clima} onChange={handleInputChange} />
+                <TextField label="Ubicación (Coordenadas)" variant="outlined" fullWidth name="ubicacion_coordenadas" value={newProject.ubicacion_coordenadas} onChange={handleInputChange} />
+              </AccordionDetails>
+            </Accordion>
+
+            <Accordion>
+              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                <Typography>Terreno</Typography>
+              </AccordionSummary>
+              <AccordionDetails sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <FormControlLabel control={<Checkbox name="cuenta_con_terreno" checked={newProject.cuenta_con_terreno} onChange={handleInputChange} />} label="Cuenta con Terreno" />
+                <TextField label="Tamaño del Terreno" variant="outlined" fullWidth name="terreno_tamano" value={newProject.terreno_tamano} onChange={handleInputChange} />
+                <TextField label="Vías de Acceso al Terreno" variant="outlined" fullWidth name="terreno_vias_acceso" value={newProject.terreno_vias_acceso} onChange={handleInputChange} />
+                <TextField label="Acceso a Recursos del Terreno" variant="outlined" fullWidth name="terreno_acceso_recursos" value={newProject.terreno_acceso_recursos} onChange={handleInputChange} />
+              </AccordionDetails>
+            </Accordion>
+
+            <Accordion>
+              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                <Typography>Contacto</Typography>
+              </AccordionSummary>
+              <AccordionDetails sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <TextField label="Nombre de Contacto" variant="outlined" fullWidth name="contacto_nombre" value={newProject.contacto_nombre} onChange={handleInputChange} />
+                <TextField label="Correo de Contacto" variant="outlined" fullWidth name="contacto_correo" value={newProject.contacto_correo} onChange={handleInputChange} />
+                <TextField label="Teléfono de Contacto" variant="outlined" fullWidth name="contacto_telefono" value={newProject.contacto_telefono} onChange={handleInputChange} />
+              </AccordionDetails>
+            </Accordion>
+
+            <Accordion>
+              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                <Typography>Participación</Typography>
+              </AccordionSummary>
+              <AccordionDetails sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <TextField label="Requisitos de Participación" variant="outlined" fullWidth name="requisitos_participacion" value={newProject.requisitos_participacion} onChange={handleInputChange} />
+                <TextField label="Experiencia Requerida" variant="outlined" fullWidth name="experiencia_requerida" value={newProject.experiencia_requerida} onChange={handleInputChange} />
+                <TextField label="Disponibilidad de Tiempo" variant="outlined" fullWidth name="disponibilidad_tiempo" value={newProject.disponibilidad_tiempo} onChange={handleInputChange} />
+                <TextField label="Competencias Específicas" variant="outlined" fullWidth name="competencias_especificas" value={newProject.competencias_especificas} onChange={handleInputChange} />
+                <TextField label="Beneficios para el Aparcero" variant="outlined" fullWidth name="beneficios_aparcero" value={newProject.beneficios_aparcero} onChange={handleInputChange} />
+                <TextField label="Condiciones del Proyecto" variant="outlined" fullWidth name="condiciones_proyecto" value={newProject.condiciones_proyecto} onChange={handleInputChange} />
+                <TextField label="Criterios de Selección" variant="outlined" fullWidth name="criterios_seleccion" value={newProject.criterios_seleccion} onChange={handleInputChange} />
+                <TextField label="Número de Participantes" variant="outlined" fullWidth name="numero_participantes" value={newProject.numero_participantes} onChange={handleInputChange} />
+              </AccordionDetails>
+            </Accordion>
+
+            <Accordion>
+              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                <Typography>Documentos</Typography>
+              </AccordionSummary>
+              <AccordionDetails sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <TextField label="Lista de Recursos" variant="outlined" fullWidth name="lista_recursos" value={newProject.lista_recursos} onChange={handleInputChange} />
+                <TextField label="Responsabilidades del Aparcero" variant="outlined" fullWidth name="responsabilidades_aparcero" value={newProject.responsabilidades_aparcero} onChange={handleInputChange} />
+                <TextField label="Colaboradores Buscados" variant="outlined" fullWidth name="colaboradores_buscados" value={newProject.colaboradores_buscados} onChange={handleInputChange} />
+                <TextField
+                  label="Fecha de Inicio"
+                  variant="outlined"
+                  fullWidth
+                  type="date"
+                  InputLabelProps={{ shrink: true }}
+                  name="fecha_de_inicio"
+                  value={newProject.fecha_de_inicio}
+                  onChange={handleInputChange}
+                />
+                <TextField
+                  label="Fecha de Fin"
+                  variant="outlined"
+                  fullWidth
+                  type="date"
+                  InputLabelProps={{ shrink: true }}
+                  name="fecha_de_fin"
+                  value={newProject.fecha_de_fin}
+                  onChange={handleInputChange}
+                />
+                <TextField label="Imagen Representativa" variant="outlined" fullWidth name="imagen_representativa" value={newProject.imagen_representativa} onChange={handleInputChange} />
+                <TextField label="Documentos Relevantes" variant="outlined" fullWidth name="documentos_relevantes" value={newProject.documentos_relevantes} onChange={handleInputChange} />
+              </AccordionDetails>
+            </Accordion>
+            
+            <Button variant="contained" color="primary" onClick={handleCreateProject} sx={{ mt: 2 }}>Crear Proyecto</Button>
           </Box>
         </DialogContent>
       </Dialog>
@@ -295,10 +338,12 @@ const ProjectsSection = () => {
           </DialogTitle>
           <DialogContent>
             <Box sx={{ textAlign: 'center', mb: 2 }}>
-              <Avatar
-                src={selectedProject.imagen_representativa}
+              <CardMedia
+                component="img"
+                height="140"
+                image={selectedProject.imagen_representativa}
                 alt={selectedProject.nombre}
-                sx={{ width: 150, height: 150, margin: 'auto', borderRadius: '50%' }}
+                sx={{ borderRadius: '50%', margin: 'auto' }}
               />
             </Box>
             <AppBar position="static" color="default" sx={{ borderRadius: '8px', mb: 2 }}>

@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Drawer, AppBar, Toolbar, List, Typography, Divider, ListItem, ListItemIcon, ListItemText, CssBaseline, Avatar, IconButton, Badge } from '@mui/material';
 import { useTheme, alpha } from '@mui/material/styles';
+import axios from 'axios'; // Asegúrate de importar axios
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import ExploreIcon from '@mui/icons-material/Explore';
 import MailIcon from '@mui/icons-material/Mail';
@@ -19,10 +20,11 @@ import ResourcesSection from './sections/resources';
 import AchievementsSection from './sections/achievements';
 import ForumSection from './sections/forum';
 import EventsSection from './sections/events';
-import Feed from './sections/Feed';  // Import the new Feed section
-import ChatSidebar from './sections/ChatSidebar';  // Import the ChatSidebar component
+import Feed from './sections/Feed';
+import ChatSidebar from './sections/ChatSidebar';
 
 const drawerWidth = 280;
+const API_URL = `${import.meta.env.VITE_API_URL}/profile/me`;
 
 const sections = [
   { id: 'profile', icon: <AssignmentIcon />, label: 'Perfil' },
@@ -32,13 +34,36 @@ const sections = [
   { id: 'achievements', icon: <StarIcon />, label: 'Logros' },
   { id: 'forum', icon: <ForumIcon />, label: 'Foro' },
   { id: 'events', icon: <EventIcon />, label: 'Eventos' },
-  { id: 'feed', icon: <ExploreIcon />, label: 'Novedades' }, // Adding a new section for the feed
+  { id: 'feed', icon: <ExploreIcon />, label: 'Novedades' },
 ];
 
 const AdminPage = () => {
   const [activeSection, setActiveSection] = useState('profile');
   const [chatSidebarOpen, setChatSidebarOpen] = useState(false);
+  const [userProfile, setUserProfile] = useState({ nombre: '', avatar: '' }); // Estado para almacenar la información del usuario
   const theme = useTheme();
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const fetchUserProfile = async () => {
+      try {
+        const response = await axios.get(API_URL, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const profileData = {
+          ...response.data,
+          avatar: response.data.avatar ? `data:image/jpeg;base64,${response.data.avatar}` : '',
+        };
+        setUserProfile(profileData);
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
 
   const handleSectionChange = (sectionId) => {
     setActiveSection(sectionId);
@@ -70,8 +95,12 @@ const AdminPage = () => {
         }}
       >
         <Box display="flex" flexDirection="column" alignItems="center" mb={2}>
-          <Avatar src="" alt="Admin User" sx={{ width: 100, height: 100, mb: 1 }} />
-          <Typography variant="h6">Juan David Gallego</Typography>
+          <Avatar
+            src={userProfile.avatar || 'https://via.placeholder.com/150'}
+            alt="Admin User"
+            sx={{ width: 100, height: 100, mb: 1 }}
+          />
+          <Typography variant="h6">{userProfile.nombre}</Typography> {/* Muestra el nombre del usuario */}
           <Typography variant="body2" color="textSecondary">Usuario</Typography>
         </Box>
         <Divider />
