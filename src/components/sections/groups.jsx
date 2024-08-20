@@ -100,13 +100,12 @@ const GroupsSection = () => {
       const response = await instance.post('/grupos/create', {
         nombre: newGroupName,
         descripcion: newGroupDescription,
-        usuarios: selectedUsuarios,
+        usuariosIds: selectedUsuarios,
       }, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
       });
-      console.log('Creating group chat response:', response.data); // Añadir log para verificar la respuesta
       setGroups([...groups, response.data]);
       setIsCreateDialogOpen(false);
       setNewGroupName('');
@@ -114,9 +113,10 @@ const GroupsSection = () => {
       setSelectedUsuarios([]);
     } catch (error) {
       console.error('Error creating group:', error);
-      console.error('Response data:', error.response.data); // Añadir log para verificar los datos de la respuesta
+      console.error('Response data:', error.response?.data || 'No response data');
     }
   };
+  
   
   
 
