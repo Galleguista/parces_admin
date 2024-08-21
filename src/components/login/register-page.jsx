@@ -11,11 +11,11 @@ const RegisterPage = ({ onRegister }) => {
   const [correoElectronico, setCorreoElectronico] = useState('');
   const [password, setPassword] = useState('');
   const [celular, setCelular] = useState('');
-  const [status, setStatus] = useState('');
   const [direccion, setDireccion] = useState('');
 
   const handleRegister = async (e) => {
     e.preventDefault();
+    const status = true; // Asignar status por defecto
     console.log('Register attempt with:', { nombre, correoElectronico, password, celular, status, direccion });
     try {
       const response = await axios.post(`${import.meta.env.VITE_API_URL}/usuarios/register`, {
@@ -106,16 +106,6 @@ const RegisterPage = ({ onRegister }) => {
                     autoComplete="celular"
                     value={celular}
                     onChange={(e) => setCelular(e.target.value)}
-                  />
-                  <TextField
-                    margin="normal"
-                    fullWidth
-                    id="status"
-                    label="Status"
-                    name="status"
-                    autoComplete="status"
-                    value={status}
-                    onChange={(e) => setStatus(e.target.value)}
                   />
                   <TextField
                     margin="normal"
