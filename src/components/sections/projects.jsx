@@ -117,7 +117,12 @@ const ProjectsSection = () => {
 
   const handleCreateProject = async () => {
     try {
-      const response = await instance.post('/proyectos/create', newProject, {
+      const projectToSend = {
+        ...newProject,
+        numero_participantes: newProject.numero_participantes ? parseInt(newProject.numero_participantes, 10) : null,
+      };
+  
+      const response = await instance.post('/proyectos/create', projectToSend, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
@@ -128,6 +133,7 @@ const ProjectsSection = () => {
       console.error('Error creating project:', error);
     }
   };
+  
 
   const filteredProjects = Array.isArray(projects) ? projects.filter((project) => {
     return (
