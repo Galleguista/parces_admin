@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Container, Grid, TextField, MenuItem, Select, InputLabel, FormControl, Box, Button, Card, CardContent, CardMedia, Typography, Fab, Dialog, DialogContent, DialogTitle, AppBar, Tabs, Tab, Accordion, AccordionSummary, AccordionDetails, FormControlLabel, Checkbox } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import {
+  Container, Grid, TextField, MenuItem, Select, InputLabel, FormControl, Box, Button, Card, CardContent,
+  Typography, Fab, Dialog, DialogContent, DialogTitle, Avatar, IconButton, CardActions, Chip, List, ListItem, ListItemText, Checkbox, 
+  FormControlLabel, CardMedia
+} from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import FavoriteIcon from '@mui/icons-material/Favorite';
+import ShareIcon from '@mui/icons-material/Share';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
 
 const instance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:4000', // Cambia este valor por el puerto en el que está corriendo tu backend
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:4000',
 });
 
 const ProjectsSection = () => {
@@ -14,7 +20,6 @@ const ProjectsSection = () => {
   const [filters, setFilters] = useState({ location: '', category: '', relevance: '' });
   const [open, setOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState(null);
-  const [tabValue, setTabValue] = useState(0);
   const [newProject, setNewProject] = useState({
     nombre: '',
     descripcion: '',
@@ -95,11 +100,6 @@ const ProjectsSection = () => {
   const handleClose = () => {
     setOpen(false);
     setSelectedProject(null);
-    setTabValue(0);
-  };
-
-  const handleTabChange = (event, newValue) => {
-    setTabValue(newValue);
   };
 
   const handleProjectClick = (project) => {
@@ -139,7 +139,7 @@ const ProjectsSection = () => {
   }) : [];
 
   return (
-    <Container sx={{ marginTop: 4, borderRadius: '16px', padding: 2, backgroundColor: '#f5f5f5', maxWidth: '90%' }}>
+    <Container sx={{ marginTop: 4, padding: 2, maxWidth: '90%' }}>
       <TextField
         fullWidth
         label="Buscar"
@@ -193,23 +193,47 @@ const ProjectsSection = () => {
         {filteredProjects.slice(0, 9).map((project) => (
           <Grid item xs={12} sm={6} md={4} key={project.proyecto_id}>
             <Card
-              sx={{ borderRadius: '24px', transition: 'transform 0.3s', '&:hover': { transform: 'scale(1.05)' } }}
+              sx={{
+                borderRadius: '16px',
+                transition: 'transform 0.3s, box-shadow 0.3s',
+                '&:hover': { transform: 'scale(1.05)', boxShadow: '0 6px 20px rgba(0, 0, 0, 0.15)' },
+                overflow: 'hidden',
+              }}
               onClick={() => handleProjectClick(project)}
             >
               <CardMedia
                 component="img"
-                height="140"
-                image={project.imagen_representativa}
+                image={project.imagen_representativa || 'https://via.placeholder.com/150'}
                 alt={project.nombre}
+                sx={{
+                  height: 200,
+                  objectFit: 'cover',
+                }}
               />
-              <CardContent>
-                <Typography gutterBottom variant="h5" component="div">
+              <CardContent sx={{ padding: 2 }}>
+                <Typography gutterBottom variant="h6" component="div">
                   {project.nombre}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" color="text.secondary" sx={{ marginBottom: 2 }}>
                   {project.descripcion}
                 </Typography>
+                <Chip
+                  label={project.categoria}
+                  sx={{ marginTop: 1 }}
+                  color="secondary"
+                />
               </CardContent>
+              <CardActions disableSpacing sx={{ justifyContent: 'center' }}>
+                <IconButton aria-label="like project" sx={{ color: 'black' }}>
+                  <FavoriteIcon />
+                </IconButton>
+                <IconButton aria-label="share project" sx={{ color: 'black' }}>
+                  <ShareIcon />
+                </IconButton>
+                <IconButton aria-label="more options" sx={{ color: 'black' }}>
+                  <MoreVertIcon />
+                </IconButton>
+              </CardActions>
             </Card>
           </Grid>
         ))}
@@ -221,105 +245,61 @@ const ProjectsSection = () => {
         <DialogTitle>Crear Nuevo Proyecto</DialogTitle>
         <DialogContent>
           <Box component="form" sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Accordion>
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography>Información General</Typography>
-              </AccordionSummary>
-              <AccordionDetails sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <TextField label="Nombre" variant="outlined" fullWidth name="nombre" value={newProject.nombre} onChange={handleInputChange} />
-                <TextField label="Descripción" variant="outlined" fullWidth multiline rows={4} name="descripcion" value={newProject.descripcion} onChange={handleInputChange} />
-                <TextField label="Objetivos" variant="outlined" fullWidth name="objetivos" value={newProject.objetivos} onChange={handleInputChange} />
-                <TextField label="Actividades Planificadas" variant="outlined" fullWidth name="actividades_planificadas" value={newProject.actividades_planificadas} onChange={handleInputChange} />
-                <TextField label="Categoría" variant="outlined" fullWidth name="categoria" value={newProject.categoria} onChange={handleInputChange} />
-              </AccordionDetails>
-            </Accordion>
-
-            <Accordion>
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography>Ubicación</Typography>
-              </AccordionSummary>
-              <AccordionDetails sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <TextField label="Ubicación (Departamento)" variant="outlined" fullWidth name="ubicacion_departamento" value={newProject.ubicacion_departamento} onChange={handleInputChange} />
-                <TextField label="Ubicación (Municipio)" variant="outlined" fullWidth name="ubicacion_municipio" value={newProject.ubicacion_municipio} onChange={handleInputChange} />
-                <TextField label="Ubicación (Región)" variant="outlined" fullWidth name="ubicacion_region" value={newProject.ubicacion_region} onChange={handleInputChange} />
-                <TextField label="Ubicación (Altitud)" variant="outlined" fullWidth name="ubicacion_altitud" value={newProject.ubicacion_altitud} onChange={handleInputChange} />
-                <TextField label="Ubicación (Clima)" variant="outlined" fullWidth name="ubicacion_clima" value={newProject.ubicacion_clima} onChange={handleInputChange} />
-                <TextField label="Ubicación (Coordenadas)" variant="outlined" fullWidth name="ubicacion_coordenadas" value={newProject.ubicacion_coordenadas} onChange={handleInputChange} />
-              </AccordionDetails>
-            </Accordion>
-
-            <Accordion>
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography>Terreno</Typography>
-              </AccordionSummary>
-              <AccordionDetails sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <FormControlLabel control={<Checkbox name="cuenta_con_terreno" checked={newProject.cuenta_con_terreno} onChange={handleInputChange} />} label="Cuenta con Terreno" />
-                <TextField label="Tamaño del Terreno" variant="outlined" fullWidth name="terreno_tamano" value={newProject.terreno_tamano} onChange={handleInputChange} />
-                <TextField label="Vías de Acceso al Terreno" variant="outlined" fullWidth name="terreno_vias_acceso" value={newProject.terreno_vias_acceso} onChange={handleInputChange} />
-                <TextField label="Acceso a Recursos del Terreno" variant="outlined" fullWidth name="terreno_acceso_recursos" value={newProject.terreno_acceso_recursos} onChange={handleInputChange} />
-              </AccordionDetails>
-            </Accordion>
-
-            <Accordion>
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography>Contacto</Typography>
-              </AccordionSummary>
-              <AccordionDetails sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <TextField label="Nombre de Contacto" variant="outlined" fullWidth name="contacto_nombre" value={newProject.contacto_nombre} onChange={handleInputChange} />
-                <TextField label="Correo de Contacto" variant="outlined" fullWidth name="contacto_correo" value={newProject.contacto_correo} onChange={handleInputChange} />
-                <TextField label="Teléfono de Contacto" variant="outlined" fullWidth name="contacto_telefono" value={newProject.contacto_telefono} onChange={handleInputChange} />
-              </AccordionDetails>
-            </Accordion>
-
-            <Accordion>
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography>Participación</Typography>
-              </AccordionSummary>
-              <AccordionDetails sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <TextField label="Requisitos de Participación" variant="outlined" fullWidth name="requisitos_participacion" value={newProject.requisitos_participacion} onChange={handleInputChange} />
-                <TextField label="Experiencia Requerida" variant="outlined" fullWidth name="experiencia_requerida" value={newProject.experiencia_requerida} onChange={handleInputChange} />
-                <TextField label="Disponibilidad de Tiempo" variant="outlined" fullWidth name="disponibilidad_tiempo" value={newProject.disponibilidad_tiempo} onChange={handleInputChange} />
-                <TextField label="Competencias Específicas" variant="outlined" fullWidth name="competencias_especificas" value={newProject.competencias_especificas} onChange={handleInputChange} />
-                <TextField label="Beneficios para el Aparcero" variant="outlined" fullWidth name="beneficios_aparcero" value={newProject.beneficios_aparcero} onChange={handleInputChange} />
-                <TextField label="Condiciones del Proyecto" variant="outlined" fullWidth name="condiciones_proyecto" value={newProject.condiciones_proyecto} onChange={handleInputChange} />
-                <TextField label="Criterios de Selección" variant="outlined" fullWidth name="criterios_seleccion" value={newProject.criterios_seleccion} onChange={handleInputChange} />
-                <TextField label="Número de Participantes" variant="outlined" fullWidth name="numero_participantes" value={newProject.numero_participantes} onChange={handleInputChange} />
-              </AccordionDetails>
-            </Accordion>
-
-            <Accordion>
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography>Documentos</Typography>
-              </AccordionSummary>
-              <AccordionDetails sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <TextField label="Lista de Recursos" variant="outlined" fullWidth name="lista_recursos" value={newProject.lista_recursos} onChange={handleInputChange} />
-                <TextField label="Responsabilidades del Aparcero" variant="outlined" fullWidth name="responsabilidades_aparcero" value={newProject.responsabilidades_aparcero} onChange={handleInputChange} />
-                <TextField label="Colaboradores Buscados" variant="outlined" fullWidth name="colaboradores_buscados" value={newProject.colaboradores_buscados} onChange={handleInputChange} />
-                <TextField
-                  label="Fecha de Inicio"
-                  variant="outlined"
-                  fullWidth
-                  type="date"
-                  InputLabelProps={{ shrink: true }}
-                  name="fecha_de_inicio"
-                  value={newProject.fecha_de_inicio}
-                  onChange={handleInputChange}
-                />
-                <TextField
-                  label="Fecha de Fin"
-                  variant="outlined"
-                  fullWidth
-                  type="date"
-                  InputLabelProps={{ shrink: true }}
-                  name="fecha_de_fin"
-                  value={newProject.fecha_de_fin}
-                  onChange={handleInputChange}
-                />
-                <TextField label="Imagen Representativa" variant="outlined" fullWidth name="imagen_representativa" value={newProject.imagen_representativa} onChange={handleInputChange} />
-                <TextField label="Documentos Relevantes" variant="outlined" fullWidth name="documentos_relevantes" value={newProject.documentos_relevantes} onChange={handleInputChange} />
-              </AccordionDetails>
-            </Accordion>
-            
+            <TextField label="Nombre" variant="outlined" fullWidth name="nombre" value={newProject.nombre} onChange={handleInputChange} />
+            <TextField label="Descripción" variant="outlined" fullWidth multiline rows={4} name="descripcion" value={newProject.descripcion} onChange={handleInputChange} />
+            <TextField label="Objetivos" variant="outlined" fullWidth name="objetivos" value={newProject.objetivos} onChange={handleInputChange} />
+            <TextField label="Actividades Planificadas" variant="outlined" fullWidth name="actividades_planificadas" value={newProject.actividades_planificadas} onChange={handleInputChange} />
+            <TextField label="Categoría" variant="outlined" fullWidth name="categoria" value={newProject.categoria} onChange={handleInputChange} />
+            <TextField label="Tipo de Cultivo" variant="outlined" fullWidth name="tipo_cultivo" value={newProject.tipo_cultivo} onChange={handleInputChange} />
+            <TextField label="Tipo de Ganadería" variant="outlined" fullWidth name="tipo_ganaderia" value={newProject.tipo_ganaderia} onChange={handleInputChange} />
+            <TextField label="Otro" variant="outlined" fullWidth name="otro" value={newProject.otro} onChange={handleInputChange} />
+            <TextField label="Ubicación (Departamento)" variant="outlined" fullWidth name="ubicacion_departamento" value={newProject.ubicacion_departamento} onChange={handleInputChange} />
+            <TextField label="Ubicación (Municipio)" variant="outlined" fullWidth name="ubicacion_municipio" value={newProject.ubicacion_municipio} onChange={handleInputChange} />
+            <TextField label="Ubicación (Región)" variant="outlined" fullWidth name="ubicacion_region" value={newProject.ubicacion_region} onChange={handleInputChange} />
+            <TextField label="Ubicación (Altitud)" variant="outlined" fullWidth name="ubicacion_altitud" value={newProject.ubicacion_altitud} onChange={handleInputChange} />
+            <TextField label="Ubicación (Clima)" variant="outlined" fullWidth name="ubicacion_clima" value={newProject.ubicacion_clima} onChange={handleInputChange} />
+            <TextField label="Ubicación (Coordenadas)" variant="outlined" fullWidth name="ubicacion_coordenadas" value={newProject.ubicacion_coordenadas} onChange={handleInputChange} />
+            <FormControlLabel control={<Checkbox name="cuenta_con_terreno" checked={newProject.cuenta_con_terreno} onChange={handleInputChange} />} label="Cuenta con Terreno" />
+            <TextField label="Tamaño del Terreno" variant="outlined" fullWidth name="terreno_tamano" value={newProject.terreno_tamano} onChange={handleInputChange} />
+            <TextField label="Vías de Acceso al Terreno" variant="outlined" fullWidth name="terreno_vias_acceso" value={newProject.terreno_vias_acceso} onChange={handleInputChange} />
+            <TextField label="Acceso a Recursos del Terreno" variant="outlined" fullWidth name="terreno_acceso_recursos" value={newProject.terreno_acceso_recursos} onChange={handleInputChange} />
+            <TextField label="Información Adicional" variant="outlined" fullWidth name="informacion_adicional" value={newProject.informacion_adicional} onChange={handleInputChange} />
+            <TextField label="Nombre de Contacto" variant="outlined" fullWidth name="contacto_nombre" value={newProject.contacto_nombre} onChange={handleInputChange} />
+            <TextField label="Correo de Contacto" variant="outlined" fullWidth name="contacto_correo" value={newProject.contacto_correo} onChange={handleInputChange} />
+            <TextField label="Teléfono de Contacto" variant="outlined" fullWidth name="contacto_telefono" value={newProject.contacto_telefono} onChange={handleInputChange} />
+            <TextField label="Requisitos de Participación" variant="outlined" fullWidth name="requisitos_participacion" value={newProject.requisitos_participacion} onChange={handleInputChange} />
+            <TextField label="Experiencia Requerida" variant="outlined" fullWidth name="experiencia_requerida" value={newProject.experiencia_requerida} onChange={handleInputChange} />
+            <TextField label="Disponibilidad de Tiempo" variant="outlined" fullWidth name="disponibilidad_tiempo" value={newProject.disponibilidad_tiempo} onChange={handleInputChange} />
+            <TextField label="Competencias Específicas" variant="outlined" fullWidth name="competencias_especificas" value={newProject.competencias_especificas} onChange={handleInputChange} />
+            <TextField label="Beneficios para el Aparcero" variant="outlined" fullWidth name="beneficios_aparcero" value={newProject.beneficios_aparcero} onChange={handleInputChange} />
+            <TextField label="Condiciones del Proyecto" variant="outlined" fullWidth name="condiciones_proyecto" value={newProject.condiciones_proyecto} onChange={handleInputChange} />
+            <TextField label="Criterios de Selección" variant="outlined" fullWidth name="criterios_seleccion" value={newProject.criterios_seleccion} onChange={handleInputChange} />
+            <TextField label="Número de Participantes" variant="outlined" fullWidth name="numero_participantes" value={newProject.numero_participantes} onChange={handleInputChange} />
+            <TextField label="Lista de Recursos" variant="outlined" fullWidth name="lista_recursos" value={newProject.lista_recursos} onChange={handleInputChange} />
+            <TextField label="Responsabilidades del Aparcero" variant="outlined" fullWidth name="responsabilidades_aparcero" value={newProject.responsabilidades_aparcero} onChange={handleInputChange} />
+            <TextField label="Colaboradores Buscados" variant="outlined" fullWidth name="colaboradores_buscados" value={newProject.colaboradores_buscados} onChange={handleInputChange} />
+            <TextField
+              label="Fecha de Inicio"
+              variant="outlined"
+              fullWidth
+              type="date"
+              InputLabelProps={{ shrink: true }}
+              name="fecha_de_inicio"
+              value={newProject.fecha_de_inicio}
+              onChange={handleInputChange}
+            />
+            <TextField
+              label="Fecha de Fin"
+              variant="outlined"
+              fullWidth
+              type="date"
+              InputLabelProps={{ shrink: true }}
+              name="fecha_de_fin"
+              value={newProject.fecha_de_fin}
+              onChange={handleInputChange}
+            />
+            <TextField label="Imagen Representativa" variant="outlined" fullWidth name="imagen_representativa" value={newProject.imagen_representativa} onChange={handleInputChange} />
+            <TextField label="Documentos Relevantes" variant="outlined" fullWidth name="documentos_relevantes" value={newProject.documentos_relevantes} onChange={handleInputChange} />
             <Button variant="contained" color="primary" onClick={handleCreateProject} sx={{ mt: 2 }}>Crear Proyecto</Button>
           </Box>
         </DialogContent>
@@ -338,56 +318,118 @@ const ProjectsSection = () => {
           </DialogTitle>
           <DialogContent>
             <Box sx={{ textAlign: 'center', mb: 2 }}>
-              <CardMedia
-                component="img"
-                height="140"
-                image={selectedProject.imagen_representativa}
-                alt={selectedProject.nombre}
-                sx={{ borderRadius: '50%', margin: 'auto' }}
+              <Avatar
+                src={selectedProject.imagen_representativa || 'https://via.placeholder.com/150'}
+                sx={{ width: 100, height: 100, mb: 2, margin: 'auto' }}
               />
             </Box>
-            <AppBar position="static" color="default" sx={{ borderRadius: '8px', mb: 2 }}>
-              <Tabs value={tabValue} onChange={handleTabChange} variant="fullWidth" indicatorColor="primary" textColor="primary">
-                <Tab label="Información" />
-                <Tab label="Miembros" />
-                <Tab label="Chat Grupal" />
-              </Tabs>
-            </AppBar>
-            {tabValue === 0 && (
-              <Box sx={{ p: 2 }}>
-                <Typography variant="body1" gutterBottom>
-                  {selectedProject.descripcion}
-                </Typography>
-                <Typography variant="body2" color="textSecondary">
-                  <strong>Ubicación:</strong> {selectedProject.ubicacion_region}
-                </Typography>
-                <Typography variant="body2" color="textSecondary">
-                  <strong>Categoría:</strong> {selectedProject.categoria}
-                </Typography>
-                <Typography variant="body2" color="textSecondary">
-                  <strong>Relevancia:</strong> {selectedProject.relevancia}
-                </Typography>
-              </Box>
-            )}
-            {tabValue === 1 && (
-              <List>
-                {selectedProject.members.map((member) => (
-                  <ListItem key={member.id}>
-                    <ListItemAvatar>
-                      <Avatar alt={member.name} src={member.avatar} />
-                    </ListItemAvatar>
-                    <ListItemText primary={member.name} />
-                  </ListItem>
-                ))}
-              </List>
-            )}
-            {tabValue === 2 && (
-              <Box sx={{ p: 2, textAlign: 'center' }}>
-                <Button variant="contained" color="primary">
-                  Unirte al chat grupal
-                </Button>
-              </Box>
-            )}
+            <Typography variant="body1" gutterBottom>
+              {selectedProject.descripcion}
+            </Typography>
+            <List>
+              <ListItem>
+                <ListItemText primary="Objetivos" secondary={selectedProject.objetivos || 'No especificado'} />
+              </ListItem>
+              <ListItem>
+                <ListItemText primary="Actividades Planificadas" secondary={selectedProject.actividades_planificadas || 'No especificado'} />
+              </ListItem>
+              <ListItem>
+                <ListItemText primary="Categoría" secondary={selectedProject.categoria} />
+              </ListItem>
+              <ListItem>
+                <ListItemText primary="Tipo de Cultivo" secondary={selectedProject.tipo_cultivo || 'No especificado'} />
+              </ListItem>
+              <ListItem>
+                <ListItemText primary="Tipo de Ganadería" secondary={selectedProject.tipo_ganaderia || 'No especificado'} />
+              </ListItem>
+              <ListItem>
+                <ListItemText primary="Otro" secondary={selectedProject.otro || 'No especificado'} />
+              </ListItem>
+              <ListItem>
+                <ListItemText primary="Ubicación (Departamento)" secondary={selectedProject.ubicacion_departamento || 'No especificado'} />
+              </ListItem>
+              <ListItem>
+                <ListItemText primary="Ubicación (Municipio)" secondary={selectedProject.ubicacion_municipio || 'No especificado'} />
+              </ListItem>
+              <ListItem>
+                <ListItemText primary="Ubicación (Región)" secondary={selectedProject.ubicacion_region} />
+              </ListItem>
+              <ListItem>
+                <ListItemText primary="Ubicación (Altitud)" secondary={selectedProject.ubicacion_altitud || 'No especificado'} />
+              </ListItem>
+              <ListItem>
+                <ListItemText primary="Ubicación (Clima)" secondary={selectedProject.ubicacion_clima || 'No especificado'} />
+              </ListItem>
+              <ListItem>
+                <ListItemText primary="Ubicación (Coordenadas)" secondary={selectedProject.ubicacion_coordenadas || 'No especificado'} />
+              </ListItem>
+              <ListItem>
+                <ListItemText primary="Cuenta con Terreno" secondary={selectedProject.cuenta_con_terreno ? 'Sí' : 'No'} />
+              </ListItem>
+              <ListItem>
+                <ListItemText primary="Tamaño del Terreno" secondary={selectedProject.terreno_tamano || 'No especificado'} />
+              </ListItem>
+              <ListItem>
+                <ListItemText primary="Vías de Acceso al Terreno" secondary={selectedProject.terreno_vias_acceso || 'No especificado'} />
+              </ListItem>
+              <ListItem>
+                <ListItemText primary="Acceso a Recursos del Terreno" secondary={selectedProject.terreno_acceso_recursos || 'No especificado'} />
+              </ListItem>
+              <ListItem>
+                <ListItemText primary="Información Adicional" secondary={selectedProject.informacion_adicional || 'No especificado'} />
+              </ListItem>
+              <ListItem>
+                <ListItemText primary="Nombre de Contacto" secondary={selectedProject.contacto_nombre || 'No especificado'} />
+              </ListItem>
+              <ListItem>
+                <ListItemText primary="Correo de Contacto" secondary={selectedProject.contacto_correo || 'No especificado'} />
+              </ListItem>
+              <ListItem>
+                <ListItemText primary="Teléfono de Contacto" secondary={selectedProject.contacto_telefono || 'No especificado'} />
+              </ListItem>
+              <ListItem>
+                <ListItemText primary="Requisitos de Participación" secondary={selectedProject.requisitos_participacion || 'No especificado'} />
+              </ListItem>
+              <ListItem>
+                <ListItemText primary="Experiencia Requerida" secondary={selectedProject.experiencia_requerida || 'No especificado'} />
+              </ListItem>
+              <ListItem>
+                <ListItemText primary="Disponibilidad de Tiempo" secondary={selectedProject.disponibilidad_tiempo || 'No especificado'} />
+              </ListItem>
+              <ListItem>
+                <ListItemText primary="Competencias Específicas" secondary={selectedProject.competencias_especificas || 'No especificado'} />
+              </ListItem>
+              <ListItem>
+                <ListItemText primary="Beneficios para el Aparcero" secondary={selectedProject.beneficios_aparcero || 'No especificado'} />
+              </ListItem>
+              <ListItem>
+                <ListItemText primary="Condiciones del Proyecto" secondary={selectedProject.condiciones_proyecto || 'No especificado'} />
+              </ListItem>
+              <ListItem>
+                <ListItemText primary="Criterios de Selección" secondary={selectedProject.criterios_seleccion || 'No especificado'} />
+              </ListItem>
+              <ListItem>
+                <ListItemText primary="Número de Participantes" secondary={selectedProject.numero_participantes || 'No especificado'} />
+              </ListItem>
+              <ListItem>
+                <ListItemText primary="Lista de Recursos" secondary={selectedProject.lista_recursos || 'No especificado'} />
+              </ListItem>
+              <ListItem>
+                <ListItemText primary="Responsabilidades del Aparcero" secondary={selectedProject.responsabilidades_aparcero || 'No especificado'} />
+              </ListItem>
+              <ListItem>
+                <ListItemText primary="Colaboradores Buscados" secondary={selectedProject.colaboradores_buscados || 'No especificado'} />
+              </ListItem>
+              <ListItem>
+                <ListItemText primary="Fecha de Inicio" secondary={new Date(selectedProject.fecha_de_inicio).toLocaleDateString() || 'No especificado'} />
+              </ListItem>
+              <ListItem>
+                <ListItemText primary="Fecha de Fin" secondary={selectedProject.fecha_de_fin ? new Date(selectedProject.fecha_de_fin).toLocaleDateString() : 'No especificado'} />
+              </ListItem>
+              <ListItem>
+                <ListItemText primary="Documentos Relevantes" secondary={selectedProject.documentos_relevantes || 'No especificado'} />
+              </ListItem>
+            </List>
           </DialogContent>
         </Dialog>
       )}

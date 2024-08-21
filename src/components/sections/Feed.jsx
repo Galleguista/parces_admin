@@ -112,7 +112,7 @@ const Feed = () => {
       try {
         const response = await axios.get(`${import.meta.env.VITE_API_URL}/users/me`, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
+            Authorization: `Bearer ${localStorage.getItem('token')}`,  
           },
         });
         setUser({
@@ -123,16 +123,20 @@ const Feed = () => {
         console.error('Error fetching user data:', error);
       }
     };
-
+  
     const fetchPublicaciones = async () => {
       try {
-        const response = await axios.get(`${API_URL}/publicaciones`);
+        const response = await axios.get(`${API_URL}/publicaciones`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,  
+          },
+        });
         setPublicaciones(response.data);
       } catch (error) {
         console.error('Error fetching publicaciones:', error);
       }
     };
-
+    
     fetchUser();
     fetchPublicaciones();
   }, []);
