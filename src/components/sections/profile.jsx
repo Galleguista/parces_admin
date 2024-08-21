@@ -50,22 +50,38 @@ const ProfileSection = () => {
 
   const handleSave = async () => {
     try {
-      const formData = new FormData();
-      formData.append('nombre', profileSettings.nombre);
-      formData.append('correo_electronico', profileSettings.correo_electronico);
-      formData.append('celular', profileSettings.celular);
-      formData.append('direccion', profileSettings.direccion);
-
       if (avatarFile) {
-        formData.append('avatar', avatarFile);
+        // Convertimos el archivo de imagen a base64 antes de enviarlo
+        const reader = new FileReader();
+        reader.readAsDataURL(avatarFile);
+        reader.onloadend = async () => {
+          const base64data = reader.result.split(',')[1]; // Remover el prefijo data:image/jpeg;base64,
+          const formData = {
+            ...profileSettings,
+            avatar: base64data,
+          };
+          await sendProfileUpdateRequest(formData);
+        };
+      } else {
+        const formData = {
+          ...profileSettings,
+        };
+        await sendProfileUpdateRequest(formData);
       }
-
+    } catch (error) {
+      console.error('Error updating profile:', error);
+    }
+  };
+  
+  const sendProfileUpdateRequest = async (formData) => {
+    try {
       const response = await axios.put(UPDATE_PROFILE_URL, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data',
+          'Content-Type': 'application/json', // Cambia esto para JSON
         },
       });
+      
       const profileData = {
         ...response.data,
         avatar: response.data.avatar ? `data:image/jpeg;base64,${response.data.avatar}` : '',
@@ -77,6 +93,7 @@ const ProfileSection = () => {
       console.error('Error updating profile:', error);
     }
   };
+  
 
   const handleChange = (e) => {
     const { name, value } = e.target;
