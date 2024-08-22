@@ -1,50 +1,48 @@
-import { useState } from 'react';
-import axios from 'axios';
+import { useEffect, useState } from 'react';
+import io from 'socket.io-client';
 
 const useChat = (chatId) => {
   const [messages, setMessages] = useState([]);
-  const [newMessage, setNewMessage] = useState('');
+  const [socket, setSocket] = useState(null);
 
-  const fetchMessages = async () => {
-    try {
-      const response = await axios.get(`${import.meta.env.VITE_API_URL}/chat/${chatId}/messages`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
+  useEffect(() => {
+    if (chatId) {
+      const newSocket = io(import.meta.env.VITE_API_URL, {
+        query: { chatId },
+        transports: ['websocket'],
+        auth: {
+          token: localStorage.getItem('token'),
         },
       });
-      setMessages(response.data);
-    } catch (error) {
-      console.error('Error fetching messages:', error);
+      setSocket(newSocket);
+
+      newSocket.on('connect', () => {
+        console.log('Connected to WebSocket server');
+        newSocket.emit('joinChat', { chatId });
+      });
+
+      newSocket.on('receiveMessage', (message) => {
+        setMessages((prevMessages) => [...prevMessages, message]);
+      });
+
+      return () => {
+        newSocket.emit('leaveChat', { chatId });
+        newSocket.disconnect();
+      };
+    }
+  }, [chatId]);
+
+  const sendMessage = (message) => {
+    if (socket && message.trim() !== '') {
+      socket.emit('sendMessage', {
+        chatId,
+        usuarioId: localStorage.getItem('usuario_id'),
+        contenido: message,
+      });
     }
   };
 
-  const sendMessage = async () => {
-    if (newMessage.trim() === '') return;
-
-    try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/chat/${chatId}/messages`,
-        { contenido: newMessage },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        }
-      );
-      setMessages([...messages, response.data]);
-      setNewMessage('');
-    } catch (error) {
-      console.error('Error sending message:', error);
-    }
-  };
-
-  return {
-    messages,
-    newMessage,
-    setNewMessage,
-    fetchMessages,
-    sendMessage
-  };
+  return { messages, sendMessage };
 };
 
 export default useChat;

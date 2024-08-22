@@ -78,7 +78,7 @@ const GroupsSection = () => {
   const handleJoinGroupChat = async (groupId) => {
     try {
       const response = await instance.post(
-        `/grupos/${groupId}/miembros`,
+        `/grupo/${groupId}/miembro`,
         {},
         {
           headers: {
@@ -89,15 +89,15 @@ const GroupsSection = () => {
       setChatId(groupId);
       setIsChatOpen(true);
       handleCloseGroup();
-      fetchMessages(groupId);
     } catch (error) {
       console.error('Error joining group chat:', error);
     }
   };
+  
 
   const handleCreateGroup = async () => {
     try {
-      const response = await instance.post('/grupos/create', {
+      const response = await instance.post('/grupo', {
         nombre: newGroupName,
         descripcion: newGroupDescription,
         usuariosIds: selectedUsuarios,
@@ -116,9 +116,6 @@ const GroupsSection = () => {
       console.error('Response data:', error.response?.data || 'No response data');
     }
   };
-  
-  
-  
 
   const handleOpenCreateDialog = () => {
     setIsCreateDialogOpen(true);
@@ -143,13 +140,13 @@ const GroupsSection = () => {
 
   const handleSendMessage = async () => {
     if (newMessage.trim() === '') return;
-
+  
     try {
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL}/chat/${chatId}/messages`,
         {
           contenido: newMessage,
-          usuario_id: localStorage.getItem('usuario_id'), // Obtener usuario_id del almacenamiento local
+          usuarioId: localStorage.getItem('usuario_id'), // Asegúrate de que el campo sea 'usuarioId'
         },
         {
           headers: {
@@ -163,12 +160,12 @@ const GroupsSection = () => {
       console.error('Error sending message:', error);
     }
   };
-
+  
   const handleAddMember = async () => {
     if (newMemberId.trim()) {
       try {
-        await instance.post(`/grupos/${selectedGroup.grupo_id}/miembros`, {
-          usuario_id: newMemberId,
+        await instance.post(`/grupo/${selectedGroup.grupo_id}/miembro`, {
+          usuarioId: newMemberId,
         }, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -181,6 +178,7 @@ const GroupsSection = () => {
       }
     }
   };
+  
 
   const handleStartPrivateChat = async (receptorId) => {
     try {
