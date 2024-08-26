@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Drawer, AppBar, Toolbar, List, Typography, Divider, ListItem, ListItemIcon, ListItemText, CssBaseline, Avatar, IconButton, Badge } from '@mui/material';
 import { useTheme, alpha } from '@mui/material/styles';
-import axios from 'axios'; // Asegúrate de importar axios
+import axios from 'axios';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import ExploreIcon from '@mui/icons-material/Explore';
 import MailIcon from '@mui/icons-material/Mail';
@@ -40,7 +40,7 @@ const sections = [
 const AdminPage = () => {
   const [activeSection, setActiveSection] = useState('profile');
   const [chatSidebarOpen, setChatSidebarOpen] = useState(false);
-  const [userProfile, setUserProfile] = useState({ nombre: '', avatar: '' }); // Estado para almacenar la información del usuario
+  const [userProfile, setUserProfile] = useState({ nombre: '', avatarBase64: '' }); // Estado para almacenar la información del usuario
   const theme = useTheme();
 
   useEffect(() => {
@@ -54,7 +54,7 @@ const AdminPage = () => {
         });
         const profileData = {
           ...response.data,
-          avatar: response.data.avatar ? `data:image/jpeg;base64,${response.data.avatar}` : '',
+          avatarBase64: response.data.avatarBase64 ? `data:image/jpeg;base64,${response.data.avatarBase64}` : '',
         };
         setUserProfile(profileData);
       } catch (error) {
@@ -96,7 +96,7 @@ const AdminPage = () => {
       >
         <Box display="flex" flexDirection="column" alignItems="center" mb={2}>
           <Avatar
-            src={userProfile.avatar || 'https://via.placeholder.com/150'}
+            src={userProfile.avatarBase64 || 'https://via.placeholder.com/150'}
             alt="Admin User"
             sx={{ width: 100, height: 100, mb: 1 }}
           />

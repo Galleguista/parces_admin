@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Card, CardContent, Typography, Avatar, Button, Grid, TextField, Divider } from '@mui/material';
+import { Box, Card, CardContent, Typography, Avatar, Button, Grid, TextField } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
 import axios from 'axios';
@@ -12,7 +12,7 @@ const initialProfile = {
   correo_electronico: '',
   celular: '',
   direccion: '',
-  avatar: '',
+  avatarBase64: '',
 };
 
 const ProfileSection = () => {
@@ -22,26 +22,26 @@ const ProfileSection = () => {
   const [avatarFile, setAvatarFile] = useState(null);
   const token = localStorage.getItem('token'); // Asegúrate de manejar correctamente el token de autenticación
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const response = await axios.get(API_URL, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        const profileData = {
-          ...response.data,
-          avatar: response.data.avatar ? `data:image/jpeg;base64,${response.data.avatar}` : '',
-        };
-        setProfile(profileData);
-        setProfileSettings(profileData);
-      } catch (error) {
-        console.error('Error fetching profile:', error);
-      }
-    };
+  const fetchProfile = async () => {
+    try {
+      const response = await axios.get(API_URL, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const profileData = {
+        ...response.data,
+        avatarBase64: response.data.avatarBase64 ? `data:image/jpeg;base64,${response.data.avatarBase64}` : '',
+      };
+      setProfile(profileData);
+      setProfileSettings(profileData);
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    }
+  };
 
-    fetchProfile();
+  useEffect(() => {
+    fetchProfile(); // Se llama cada vez que se monta la vista para obtener el perfil actualizado
   }, [token]);
 
   const handleEdit = () => {
@@ -50,41 +50,26 @@ const ProfileSection = () => {
 
   const handleSave = async () => {
     try {
+      const formData = new FormData();
+      formData.append('nombre', profileSettings.nombre);
+      formData.append('correo_electronico', profileSettings.correo_electronico);
+      formData.append('celular', profileSettings.celular);
+      formData.append('direccion', profileSettings.direccion);
+
       if (avatarFile) {
-        // Convertimos el archivo de imagen a base64 antes de enviarlo
-        const reader = new FileReader();
-        reader.readAsDataURL(avatarFile);
-        reader.onloadend = async () => {
-          const base64data = reader.result.split(',')[1]; // Remover el prefijo data:image/jpeg;base64,
-          const formData = {
-            ...profileSettings,
-            avatar: base64data,
-          };
-          await sendProfileUpdateRequest(formData);
-        };
-      } else {
-        const formData = {
-          ...profileSettings,
-        };
-        await sendProfileUpdateRequest(formData);
+        formData.append('avatar', avatarFile); // Asegúrate de que 'avatar' es lo que espera el backend
       }
-    } catch (error) {
-      console.error('Error updating profile:', error);
-    }
-  };
-  
-  const sendProfileUpdateRequest = async (formData) => {
-    try {
+
       const response = await axios.put(UPDATE_PROFILE_URL, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json', // Cambia esto para JSON
+          'Content-Type': 'multipart/form-data',
         },
       });
-      
+
       const profileData = {
         ...response.data,
-        avatar: response.data.avatar ? `data:image/jpeg;base64,${response.data.avatar}` : '',
+        avatarBase64: response.data.avatarBase64 ? `data:image/jpeg;base64,${response.data.avatarBase64}` : '',
       };
       setProfile(profileData);
       setProfileSettings(profileData);
@@ -93,7 +78,6 @@ const ProfileSection = () => {
       console.error('Error updating profile:', error);
     }
   };
-  
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -115,7 +99,7 @@ const ProfileSection = () => {
         <CardContent>
           <Box display="flex" flexDirection="column" alignItems="center">
             <Avatar
-              src={validateBase64Image(profile.avatar) ? profile.avatar : 'https://via.placeholder.com/150'}
+              src={validateBase64Image(profile.avatarBase64) ? profile.avatarBase64 : 'https://via.placeholder.com/150'}
               alt="Profile Picture"
               sx={{ width: 120, height: 120, border: '4px solid', borderColor: 'primary.main', mb: 2 }}
             />
