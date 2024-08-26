@@ -78,7 +78,7 @@ const GroupsSection = () => {
   const handleJoinGroupChat = async (groupId) => {
     try {
       const response = await instance.post(
-        `/grupo/${groupId}/miembro`,
+        `/grupos/${groupId}/miembro`,
         {},
         {
           headers: {
@@ -97,7 +97,7 @@ const GroupsSection = () => {
 
   const handleCreateGroup = async () => {
     try {
-      const response = await instance.post('/grupo', {
+      const response = await instance.post('/grupos', {
         nombre: newGroupName,
         descripcion: newGroupDescription,
         usuariosIds: selectedUsuarios,
