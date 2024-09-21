@@ -1,47 +1,41 @@
+// AdminPage.jsx
 import React, { useState, useEffect } from 'react';
-import { Box, Drawer, AppBar, Toolbar, List, Typography, Divider, ListItem, ListItemIcon, ListItemText, CssBaseline, Avatar, IconButton, Badge } from '@mui/material';
-import { useTheme, alpha } from '@mui/material/styles';
+import { Box, CssBaseline, IconButton } from '@mui/material';
+import MenuIcon from '@mui/icons-material/Menu';
 import axios from 'axios';
-import AssignmentIcon from '@mui/icons-material/Assignment';
-import ExploreIcon from '@mui/icons-material/Explore';
-import MailIcon from '@mui/icons-material/Mail';
-import GroupIcon from '@mui/icons-material/Group';
-import SchoolIcon from '@mui/icons-material/School';
-import StarIcon from '@mui/icons-material/Star';
-import ForumIcon from '@mui/icons-material/Forum';
-import EventIcon from '@mui/icons-material/Event';
-import NotificationsIcon from '@mui/icons-material/Notifications';
-import ExitToAppIcon from '@mui/icons-material/ExitToApp';
+import { useNavigate } from 'react-router-dom';
+import Navbar from './main/NavBar';
+import Sidebar from './main/Sidebar';
+import ChatSidebar from './sections/ChatSidebar';
 import ProfileSection from './sections/profile';
 import ProjectsSection from './sections/projects';
-import ChatsSection from './sections/messages';
 import GroupsSection from './sections/groups';
 import ResourcesSection from './sections/resources';
 import AchievementsSection from './sections/achievements';
 import ForumSection from './sections/forum';
 import EventsSection from './sections/events';
 import Feed from './sections/Feed';
-import ChatSidebar from './sections/ChatSidebar';
 
 const drawerWidth = 280;
 const API_URL = `${import.meta.env.VITE_API_URL}/profile/me`;
 
 const sections = [
-  { id: 'profile', icon: <AssignmentIcon />, label: 'Perfil' },
-  { id: 'projects', icon: <ExploreIcon />, label: 'Proyectos' },
-  { id: 'groups', icon: <GroupIcon />, label: 'Grupos' },
-  { id: 'resources', icon: <SchoolIcon />, label: 'Recursos' },
-  { id: 'achievements', icon: <StarIcon />, label: 'Logros' },
-  { id: 'forum', icon: <ForumIcon />, label: 'Foro' },
-  { id: 'events', icon: <EventIcon />, label: 'Eventos' },
-  { id: 'feed', icon: <ExploreIcon />, label: 'Novedades' },
+  { id: 'profile', label: 'Perfil' },
+  { id: 'projects', label: 'Proyectos' },
+  { id: 'groups', label: 'Grupos' },
+  { id: 'resources', label: 'Recursos' },
+  { id: 'achievements', label: 'Logros' },
+  { id: 'forum', label: 'Foro' },
+  { id: 'events', label: 'Eventos' },
+  { id: 'feed', label: 'Novedades' },
 ];
 
 const AdminPage = () => {
   const [activeSection, setActiveSection] = useState('profile');
   const [chatSidebarOpen, setChatSidebarOpen] = useState(false);
-  const [userProfile, setUserProfile] = useState({ nombre: '', avatarBase64: '' }); // Estado para almacenar la información del usuario
-  const theme = useTheme();
+  const [userProfile, setUserProfile] = useState({ nombre: '', avatarBase64: '' });
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -77,86 +71,42 @@ const AdminPage = () => {
     setChatSidebarOpen(false);
   };
 
+  const handleDrawerToggle = () => {
+    setMobileOpen(!mobileOpen);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    navigate('/login');
+  };
+
+  const currentSection = sections.find((section) => section.id === activeSection)?.label;
+
   return (
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />
-      <Drawer
-        variant="permanent"
-        sx={{
-          width: drawerWidth,
-          flexShrink: 0,
-          '& .MuiDrawer-paper': {
-            width: drawerWidth,
-            boxSizing: 'border-box',
-            backgroundColor: theme.palette.background.paper,
-            borderRight: `1px solid ${theme.palette.divider}`,
-            padding: theme.spacing(2),
-          },
-        }}
-      >
-        <Box display="flex" flexDirection="column" alignItems="center" mb={2}>
-          <Avatar
-            src={userProfile.avatarBase64 || 'https://via.placeholder.com/150'}
-            alt="Admin User"
-            sx={{ width: 100, height: 100, mb: 1 }}
-          />
-          <Typography variant="h6">{userProfile.nombre}</Typography> {/* Muestra el nombre del usuario */}
-          <Typography variant="body2" color="textSecondary">Usuario</Typography>
-        </Box>
-        <Divider />
-        <List>
-          {sections.map((section) => (
-            <ListItem
-              button
-              key={section.id}
-              onClick={() => handleSectionChange(section.id)}
-              sx={{
-                borderRadius: 1,
-                '&:hover': {
-                  backgroundColor: alpha(theme.palette.primary.main, 0.1),
-                  color: theme.palette.primary.contrastText,
-                },
-                backgroundColor: activeSection === section.id ? alpha(theme.palette.primary.main, 0.2) : 'inherit',
-                color: activeSection === section.id ? theme.palette.primary.contrastText : 'inherit',
-              }}
-            >
-              <ListItemIcon sx={{ color: activeSection === section.id ? theme.palette.primary.contrastText : theme.palette.text.primary }}>
-                {section.icon}
-              </ListItemIcon>
-              <ListItemText primary={section.label} />
-            </ListItem>
-          ))}
-        </List>
-      </Drawer>
+      <Sidebar
+        activeSection={activeSection}
+        handleSectionChange={handleSectionChange}
+        userProfile={userProfile}
+        mobileOpen={mobileOpen}
+        handleDrawerToggle={handleDrawerToggle}
+      />
       <Box component="main" sx={{ flexGrow: 1, p: 3, width: { sm: `calc(100% - ${drawerWidth}px)` } }}>
-        <AppBar 
-          position="static" 
-          color="default" 
-          sx={{ 
-            mb: 3, 
-            boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)', 
-            borderBottom: `1px solid ${theme.palette.divider}` 
-          }}
+        <Navbar
+          onMessagesClick={handleMessagesClick}
+          currentSection={currentSection}
+          onLogout={handleLogout}
+        />
+        <IconButton
+          color="inherit"
+          aria-label="open drawer"
+          edge="start"
+          onClick={handleDrawerToggle}
+          sx={{ mr: 2, display: { sm: 'none' } }}
         >
-          <Toolbar>
-            <Typography variant="h6" sx={{ flexGrow: 1 }}>
-              {sections.find((section) => section.id === activeSection)?.label}
-            </Typography>
-            <IconButton color="inherit">
-              <Badge badgeContent={4} color="primary">
-                <NotificationsIcon />
-              </Badge>
-            </IconButton>
-            <IconButton color="inherit" onClick={handleMessagesClick}>
-              <Badge badgeContent={3} color="primary">
-                <MailIcon />
-              </Badge>
-            </IconButton>
-            <IconButton color="inherit">
-              <ExitToAppIcon />
-            </IconButton>
-          </Toolbar>
-        </AppBar>
+          <MenuIcon />
+        </IconButton>
         {activeSection === 'profile' && <ProfileSection />}
         {activeSection === 'projects' && <ProjectsSection />}
         {activeSection === 'groups' && <GroupsSection />}
