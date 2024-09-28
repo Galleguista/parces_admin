@@ -10,6 +10,7 @@ const LoginPage = ({ onLogin, onShowRegister }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
+  
   const handleLogin = async (e) => {
     e.preventDefault();
     console.log('Login attempt with:', { username, password });
@@ -23,6 +24,7 @@ const LoginPage = ({ onLogin, onShowRegister }) => {
       console.log('Access token received:', access_token);
       localStorage.setItem('token', access_token);
       onLogin();
+      navigate('/admin');
     } catch (error) {
       console.error('Error during login:', error);
       alert('Invalid credentials');

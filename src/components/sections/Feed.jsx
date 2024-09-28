@@ -38,7 +38,7 @@ const PostCard = ({ post }) => (
         <ChatBubbleOutline fontSize="small" />
       </IconButton>
     </CardActions>
-  </Card>
+  </Card> 
 );
 
 const NewPostCard = ({ onPostCreated, user }) => {

@@ -26,13 +26,17 @@ const App = () => {
 
   return (
     <Routes>
-      <Route
-        path="/"
-        element={isLoggedIn ? <Navigate to="/admin" /> : <Navigate to="/login" />} 
-      />
-      <Route path="/login" element={<LoginPage onLogin={handleLogin} />} />
+      {/* Ruta pública para la vista de registro */}
       <Route path="/register" element={<RegisterPage />} />
-      <Route path="/admin" element={<AdminPage onLogout={handleLogout} />} />
+
+      {/* Si el usuario está logueado, redirigir a /admin */}
+      <Route path="/" element={isLoggedIn ? <Navigate to="/admin" /> : <Navigate to="/login" />} />
+
+      {/* Ruta pública para la vista de login */}
+      <Route path="/login" element={<LoginPage onLogin={handleLogin} />} />
+
+      {/* Ruta protegida para el admin */}
+      <Route path="/admin" element={isLoggedIn ? <AdminPage onLogout={handleLogout} /> : <Navigate to="/login" />} />
     </Routes>
   );
 };
