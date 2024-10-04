@@ -91,7 +91,7 @@ const LoginPage = ({ onLogin, onShowRegister }) => {
                   >
                     Login
                   </Button>
-                  <Link href="#" variant="body2" onClick={onShowRegister}>
+                  <Link href="/register" variant="body2" onClick={onShowRegister}>
                     {"Don't have an account? Create one"}
                   </Link>
                 </Box>

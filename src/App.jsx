@@ -24,10 +24,15 @@ const App = () => {
     localStorage.removeItem('isLoggedIn');
   };
 
+  const handleRegister = () => {
+    setIsLoggedIn(true);
+    localStorage.setItem('isLoggedIn', 'true');
+  };
+
   return (
     <Routes>
       {/* Ruta pública para la vista de registro */}
-      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/register" element={<RegisterPage onRegister={handleRegister} />} />
 
       {/* Si el usuario está logueado, redirigir a /admin */}
       <Route path="/" element={isLoggedIn ? <Navigate to="/admin" /> : <Navigate to="/login" />} />
