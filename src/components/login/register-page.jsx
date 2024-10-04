@@ -13,8 +13,8 @@ const RegisterPage = ({ onRegister }) => {
   const [password, setPassword] = useState('');
   const [celular, setCelular] = useState('');
   const [direccion, setDireccion] = useState('');
-  const [errors, setErrors] = useState({});  // Estado para los errores de validación
-  const [open, setOpen] = useState(false);
+  const [errors, setErrors] = useState({}); // Estado para los errores de validación
+  const [open, setOpen] = useState(false); // Estado para el modal de éxito
   const navigate = useNavigate();
 
   // Validación simple para el correo
@@ -28,31 +28,69 @@ const RegisterPage = ({ onRegister }) => {
     return password.length >= 6;
   };
 
+  // Validar un campo y actualizar los errores
+  const validateField = (name, value) => {
+    let errorMessage = '';
+
+    switch (name) {
+      case 'nombre':
+        if (!value) {
+          errorMessage = 'El nombre es obligatorio';
+        }
+        break;
+      case 'correoElectronico':
+        if (!isValidEmail(value)) {
+          errorMessage = 'Debe ingresar un correo electrónico válido';
+        }
+        break;
+      case 'password':
+        if (!isValidPassword(value)) {
+          errorMessage = 'La contraseña debe tener al menos 6 caracteres';
+        }
+        break;
+      default:
+        break;
+    }
+
+    setErrors((prevErrors) => ({ ...prevErrors, [name]: errorMessage }));
+  };
+
+  // Manejar el cambio en cada campo y validar
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    if (name === 'nombre') setNombre(value);
+    if (name === 'correoElectronico') setCorreoElectronico(value);
+    if (name === 'password') setPassword(value);
+    if (name === 'celular') setCelular(value);
+    if (name === 'direccion') setDireccion(value);
+
+    // Validación en tiempo real
+    validateField(name, value);
+  };
+
+  // Manejar el envío del formulario
   const handleRegister = async (e) => {
     e.preventDefault();
 
-    // Validaciones previas en el frontend
+    // Validaciones finales cuando se intenta enviar el formulario
     let newErrors = {};
     if (!nombre) {
-      newErrors.nombre = "El nombre es obligatorio";
+      newErrors.nombre = 'El nombre es obligatorio';
     }
     if (!isValidEmail(correoElectronico)) {
-      newErrors.correoElectronico = "Debe ingresar un correo electrónico válido";
+      newErrors.correoElectronico = 'Debe ingresar un correo electrónico válido';
     }
     if (!isValidPassword(password)) {
-      newErrors.password = "La contraseña debe tener al menos 6 caracteres";
+      newErrors.password = 'La contraseña debe tener al menos 6 caracteres';
     }
 
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
+    setErrors(newErrors);
 
-    const status = true;  // Omitimos cualquier lógica de verificación y asumimos que el usuario está activo por defecto
-    console.log('Register attempt with:', { nombre, correoElectronico, password, celular, status, direccion });
+    // Si hay errores, no continuar con la solicitud
+    if (Object.keys(newErrors).length > 0) return;
 
+    const status = true;
     try {
-      // Enviar la solicitud al backend para registro
       const response = await axios.post(`${import.meta.env.VITE_API_URL}/usuarios/register`, {
         nombre,
         correo_electronico: correoElectronico,
@@ -63,13 +101,11 @@ const RegisterPage = ({ onRegister }) => {
       });
 
       if (response.data.success) {
-        console.log('Response from backend:', response);
         onRegister();
-        setOpen(true);
+        setOpen(true); // Muestra la ventana de registro exitoso
       } else {
-        alert('No se pudo completar el registro. Verifique sus datos.');
+        alert(response.data.message); // Muestra el mensaje de error devuelto por el backend
       }
-
     } catch (error) {
       console.error('Error during registration:', error);
       alert('Error durante el registro. Verifique su información o intente nuevamente.');
@@ -120,7 +156,8 @@ const RegisterPage = ({ onRegister }) => {
                     autoComplete="nombre"
                     autoFocus
                     value={nombre}
-                    onChange={(e) => setNombre(e.target.value)}
+                    onChange={handleChange}
+                    onBlur={(e) => validateField(e.target.name, e.target.value)}
                     error={!!errors.nombre}
                     helperText={errors.nombre}
                   />
@@ -133,7 +170,8 @@ const RegisterPage = ({ onRegister }) => {
                     name="correoElectronico"
                     autoComplete="email"
                     value={correoElectronico}
-                    onChange={(e) => setCorreoElectronico(e.target.value)}
+                    onChange={handleChange}
+                    onBlur={(e) => validateField(e.target.name, e.target.value)}
                     error={!!errors.correoElectronico}
                     helperText={errors.correoElectronico}
                   />
@@ -147,7 +185,8 @@ const RegisterPage = ({ onRegister }) => {
                     id="password"
                     autoComplete="current-password"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={handleChange}
+                    onBlur={(e) => validateField(e.target.name, e.target.value)}
                     error={!!errors.password}
                     helperText={errors.password}
                   />
@@ -159,7 +198,7 @@ const RegisterPage = ({ onRegister }) => {
                     name="celular"
                     autoComplete="celular"
                     value={celular}
-                    onChange={(e) => setCelular(e.target.value)}
+                    onChange={handleChange}
                   />
                   <TextField
                     margin="normal"
@@ -169,7 +208,7 @@ const RegisterPage = ({ onRegister }) => {
                     name="direccion"
                     autoComplete="direccion"
                     value={direccion}
-                    onChange={(e) => setDireccion(e.target.value)}
+                    onChange={handleChange}
                   />
                   <Button
                     type="submit"
