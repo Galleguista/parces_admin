@@ -3,13 +3,14 @@ import axios from 'axios';
 import {
   Container, Grid, TextField, MenuItem, Select, InputLabel, FormControl, Box, Button, Card, CardContent,
   Typography, Fab, Dialog, DialogContent, DialogTitle, Avatar, IconButton, CardActions, Chip, List, ListItem, ListItemText, Checkbox, 
-  FormControlLabel, CardMedia, Accordion, AccordionSummary, AccordionDetails
+  FormControlLabel, CardMedia, Accordion, AccordionSummary, AccordionDetails, ListItemIcon
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import ShareIcon from '@mui/icons-material/Share';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import DeleteIcon from '@mui/icons-material/Delete'; // Importar DeleteIcon
 
 const instance = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:4000',
@@ -21,6 +22,7 @@ const ProjectsSection = () => {
   const [filters, setFilters] = useState({ location: '', category: '', relevance: '' });
   const [open, setOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState(null);
+  const [newRequirement, setNewRequirement] = useState({ title: '', description: '' });
   const [newProject, setNewProject] = useState({
     nombre: '',
     descripcion: '',
@@ -44,7 +46,7 @@ const ProjectsSection = () => {
     contacto_nombre: '',
     contacto_correo: '',
     contacto_telefono: '',
-    requisitos_participacion: '',
+    requisitos_participacion: [],
     experiencia_requerida: '',
     disponibilidad_tiempo: '',
     competencias_especificas: '',
@@ -116,6 +118,30 @@ const ProjectsSection = () => {
     });
   };
 
+  const handleRequirementChange = (event) => {
+    const { name, value } = event.target;
+    setNewRequirement({
+      ...newRequirement,
+      [name]: value,
+    });
+  };
+
+  const handleAddRequirement = () => {
+    if (newRequirement.title && newRequirement.description) {
+      setNewProject({
+        ...newProject,
+        requisitos_participacion: [...newProject.requisitos_participacion, newRequirement],
+      });
+      setNewRequirement({ title: '', description: '' });
+    }
+  };
+
+  const handleDeleteRequirement = (index) => {
+    const updatedRequirements = [...newProject.requisitos_participacion];
+    updatedRequirements.splice(index, 1);
+    setNewProject({ ...newProject, requisitos_participacion: updatedRequirements });
+  };
+
   const handleImageChange = (event) => {
     const file = event.target.files[0];
     const reader = new FileReader();
@@ -169,8 +195,8 @@ const ProjectsSection = () => {
         onChange={handleSearchChange}
         sx={{ marginBottom: 2 }}
       />
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
-        <FormControl variant="outlined" sx={{ minWidth: 120 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2, flexWrap: 'wrap' }}>
+        <FormControl variant="outlined" sx={{ minWidth: 120, marginBottom: 1 }}>
           <InputLabel>Ubicación</InputLabel>
           <Select
             name="location"
@@ -183,7 +209,7 @@ const ProjectsSection = () => {
             <MenuItem value="Ubicación 2">Ubicación 2</MenuItem>
           </Select>
         </FormControl>
-        <FormControl variant="outlined" sx={{ minWidth: 120 }}>
+        <FormControl variant="outlined" sx={{ minWidth: 120, marginBottom: 1 }}>
           <InputLabel>Categoría</InputLabel>
           <Select
             name="category"
@@ -196,7 +222,7 @@ const ProjectsSection = () => {
             <MenuItem value="Categoría 2">Categoría 2</MenuItem>
           </Select>
         </FormControl>
-        <FormControl variant="outlined" sx={{ minWidth: 120 }}>
+        <FormControl variant="outlined" sx={{ minWidth: 120, marginBottom: 1 }}>
           <InputLabel>Relevancia</InputLabel>
           <Select
             name="relevance"
@@ -212,7 +238,7 @@ const ProjectsSection = () => {
       </Box>
       <Grid container spacing={2}>
         {filteredProjects.slice(0, 9).map((project) => (
-          <Grid item xs={12} sm={6} md={4} key={project.proyecto_id}>
+          <Grid item xs={12} sm={6} md={4} lg={3} key={project.proyecto_id}>
             <Card
               sx={{
                 borderRadius: '16px',
@@ -269,7 +295,7 @@ const ProjectsSection = () => {
       <Dialog open={open} onClose={handleClose} PaperProps={{ sx: { borderRadius: '24px', width: '80%' } }}>
         <DialogTitle>Crear Nuevo Proyecto</DialogTitle>
         <DialogContent>
-          <Box component="form" sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}> {/* Incrementé el `gap` */}
+          <Box component="form" sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             <Accordion>
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                 <Typography>Información Básica</Typography>
@@ -280,6 +306,50 @@ const ProjectsSection = () => {
                 <TextField label="Objetivos" variant="outlined" fullWidth name="objetivos" value={newProject.objetivos} onChange={handleInputChange} sx={{ marginBottom: 2 }} />
               </AccordionDetails>
             </Accordion>
+            <Accordion>
+              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                <Typography>Requisitos de Participación</Typography>
+              </AccordionSummary>
+              <AccordionDetails>
+                <Box sx={{ display: 'flex', gap: 2, marginBottom: 2 }}>
+                  <TextField
+                    label="Título del Requisito"
+                    variant="outlined"
+                    fullWidth
+                    name="title"
+                    value={newRequirement.title}
+                    onChange={handleRequirementChange}
+                  />
+                  <TextField
+                    label="Descripción del Requisito"
+                    variant="outlined"
+                    fullWidth
+                    name="description"
+                    value={newRequirement.description}
+                    onChange={handleRequirementChange}
+                  />
+                  <Button variant="contained" color="primary" onClick={handleAddRequirement}>
+                    Add
+                  </Button>
+                </Box>
+                <List>
+                  {newProject.requisitos_participacion.map((req, index) => (
+                    <ListItem key={index}>
+                      <ListItemText
+                        primary={req.title}
+                        secondary={req.description}
+                      />
+                      <ListItemIcon>
+                        <IconButton edge="end" onClick={() => handleDeleteRequirement(index)}>
+                          <DeleteIcon />
+                        </IconButton>
+                      </ListItemIcon>
+                    </ListItem>
+                  ))}
+                </List>
+              </AccordionDetails>
+            </Accordion>
+            {/* Aquí agregamos los demás campos que faltan */}
             <Accordion>
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                 <Typography>Detalles del Proyecto</Typography>
@@ -317,17 +387,6 @@ const ProjectsSection = () => {
                 <TextField label="Nombre de Contacto" variant="outlined" fullWidth name="contacto_nombre" value={newProject.contacto_nombre} onChange={handleInputChange} sx={{ marginBottom: 2 }} />
                 <TextField label="Correo de Contacto" variant="outlined" fullWidth name="contacto_correo" value={newProject.contacto_correo} onChange={handleInputChange} sx={{ marginBottom: 2 }} />
                 <TextField label="Teléfono de Contacto" variant="outlined" fullWidth name="contacto_telefono" value={newProject.contacto_telefono} onChange={handleInputChange} sx={{ marginBottom: 2 }} />
-                <TextField label="Requisitos de Participación" variant="outlined" fullWidth name="requisitos_participacion" value={newProject.requisitos_participacion} onChange={handleInputChange} sx={{ marginBottom: 2 }} />
-                <TextField label="Experiencia Requerida" variant="outlined" fullWidth name="experiencia_requerida" value={newProject.experiencia_requerida} onChange={handleInputChange} sx={{ marginBottom: 2 }} />
-                <TextField label="Disponibilidad de Tiempo" variant="outlined" fullWidth name="disponibilidad_tiempo" value={newProject.disponibilidad_tiempo} onChange={handleInputChange} sx={{ marginBottom: 2 }} />
-                <TextField label="Competencias Específicas" variant="outlined" fullWidth name="competencias_especificas" value={newProject.competencias_especificas} onChange={handleInputChange} sx={{ marginBottom: 2 }} />
-                <TextField label="Beneficios para el Aparcero" variant="outlined" fullWidth name="beneficios_aparcero" value={newProject.beneficios_aparcero} onChange={handleInputChange} sx={{ marginBottom: 2 }} />
-                <TextField label="Condiciones del Proyecto" variant="outlined" fullWidth name="condiciones_proyecto" value={newProject.condiciones_proyecto} onChange={handleInputChange} sx={{ marginBottom: 2 }} />
-                <TextField label="Criterios de Selección" variant="outlined" fullWidth name="criterios_seleccion" value={newProject.criterios_seleccion} onChange={handleInputChange} sx={{ marginBottom: 2 }} />
-                <TextField label="Número de Participantes" variant="outlined" fullWidth name="numero_participantes" value={newProject.numero_participantes} onChange={handleInputChange} sx={{ marginBottom: 2 }} />
-                <TextField label="Lista de Recursos" variant="outlined" fullWidth name="lista_recursos" value={newProject.lista_recursos} onChange={handleInputChange} sx={{ marginBottom: 2 }} />
-                <TextField label="Responsabilidades del Aparcero" variant="outlined" fullWidth name="responsabilidades_aparcero" value={newProject.responsabilidades_aparcero} onChange={handleInputChange} sx={{ marginBottom: 2 }} />
-                <TextField label="Colaboradores Buscados" variant="outlined" fullWidth name="colaboradores_buscados" value={newProject.colaboradores_buscados} onChange={handleInputChange} sx={{ marginBottom: 2 }} />
               </AccordionDetails>
             </Accordion>
             <Accordion>

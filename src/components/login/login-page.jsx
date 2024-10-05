@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Container, Box, Card, CardContent, TextField, Button, Typography, Avatar, CssBaseline, Link } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { useNavigate } from 'react-router-dom'; // Importa useNavigate
 import axios from 'axios';
 
 const theme = createTheme();
@@ -9,8 +10,8 @@ const theme = createTheme();
 const LoginPage = ({ onLogin, onShowRegister }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const navigate = useNavigate(); // Definir navigate con useNavigate
 
-  
   const handleLogin = async (e) => {
     e.preventDefault();
     console.log('Login attempt with:', { username, password });
@@ -24,7 +25,7 @@ const LoginPage = ({ onLogin, onShowRegister }) => {
       console.log('Access token received:', access_token);
       localStorage.setItem('token', access_token);
       onLogin();
-      navigate('/admin');
+      navigate('/admin'); // Usar navigate para redirigir a /admin
     } catch (error) {
       console.error('Error during login:', error);
       alert('Invalid credentials');
