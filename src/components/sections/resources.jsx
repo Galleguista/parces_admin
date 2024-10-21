@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
-  Grid, Card, CardContent, Typography, Button, Dialog, DialogTitle, DialogContent, DialogActions,
-  TextField, IconButton, Box, Avatar, InputLabel, Input
+  Grid, Card, CardContent, Typography, IconButton, Box, Avatar, InputLabel, Input, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
@@ -12,7 +11,7 @@ import ImageIcon from '@mui/icons-material/Image';
 import DownloadIcon from '@mui/icons-material/Download';
 
 const API_URL = `${import.meta.env.VITE_API_URL}/recursos`;
-const FILES_URL = `${import.meta.env.VITE_FILES_URL}/files`;
+const FILES_URL = `${import.meta.env.VITE_PUBLIC_URL}`;
 
 const ResourcesSection = () => {
   const [resources, setResources] = useState([]);
@@ -108,7 +107,7 @@ const ResourcesSection = () => {
   const handleDownloadPdf = (pdfUrl) => {
     const link = document.createElement('a');
     link.href = pdfUrl;
-    link.setAttribute('download', 'file.pdf'); // nombre del archivo de descarga
+    link.setAttribute('download', pdfUrl.split('/').pop()); // Descargar con el nombre original
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -124,15 +123,15 @@ const ResourcesSection = () => {
       </Box>
       <Grid container spacing={3}>
         {resources.map((resource) => (
-          <Grid item xs={12} sm={6} md={4} key={resource.recurso_id}>
-            <Card sx={{ borderRadius: '16px', boxShadow: 3 }}>
+          <Grid item xs={12} sm={6} md={3} key={resource.recurso_id}>
+            <Card sx={{ borderRadius: '16px', boxShadow: 3, height: '100%', minHeight: '200px' }}>
               <CardContent>
                 {resource.imagen_url && (
                   <Box
                     component="img"
                     src={`${FILES_URL}${resource.imagen_url}`}
                     alt={resource.nombre}
-                    sx={{ width: '100%', height: 140, borderRadius: '16px', mb: 2 }}
+                    sx={{ width: '100%', height: 120, borderRadius: '16px', mb: 2, objectFit: 'cover' }}
                   />
                 )}
                 <Box display="flex" alignItems="center" mb={2}>
@@ -143,14 +142,9 @@ const ResourcesSection = () => {
                 </Box>
                 <Box display="flex" justifyContent="space-between">
                   {resource.pdf_url && (
-                    <Button
-                      variant="outlined"
-                      color="primary"
-                      startIcon={<DownloadIcon />}
-                      onClick={() => handleDownloadPdf(`${FILES_URL}${resource.pdf_url}`)}
-                    >
-                      Descargar PDF
-                    </Button>
+                    <IconButton color="primary" onClick={() => handleDownloadPdf(`${FILES_URL}${resource.pdf_url}`)}>
+                      <DownloadIcon />
+                    </IconButton>
                   )}
                   <IconButton color="primary" onClick={() => handleOpenDialog(resource)}>
                     <EditIcon />
