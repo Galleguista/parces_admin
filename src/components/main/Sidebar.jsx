@@ -1,6 +1,5 @@
-// Sidebar.js
 import React from 'react';
-import { Drawer, List, ListItem, ListItemIcon, ListItemText, Box, Avatar, Typography, Divider } from '@mui/material';
+import { Drawer, List, ListItem, ListItemIcon, ListItemText, Box, Avatar, Typography, Divider, Stack } from '@mui/material';
 import { useTheme, alpha } from '@mui/material/styles';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import ExploreIcon from '@mui/icons-material/Explore';
@@ -9,6 +8,7 @@ import SchoolIcon from '@mui/icons-material/School';
 import StarIcon from '@mui/icons-material/Star';
 import ForumIcon from '@mui/icons-material/Forum';
 import EventIcon from '@mui/icons-material/Event';
+import { StackedBarChart } from '@mui/icons-material';
 
 const drawerWidth = 280;
 
@@ -20,6 +20,7 @@ const sections = [
   { id: 'achievements', icon: <StarIcon />, label: 'Logros' },
   { id: 'forum', icon: <ForumIcon />, label: 'Foro' },
   { id: 'events', icon: <EventIcon />, label: 'Eventos' },
+  { id: 'feed', icon: <StackedBarChart />, label: 'Novedades' },
 ];
 
 const Sidebar = ({ activeSection, handleSectionChange, userProfile, mobileOpen, handleDrawerToggle }) => {
@@ -30,7 +31,7 @@ const Sidebar = ({ activeSection, handleSectionChange, userProfile, mobileOpen, 
     <>
       <Box display="flex" flexDirection="column" alignItems="center" mb={2}>
         <Avatar
-          src={userProfile.avatarBase64 || 'https://via.placeholder.com/150'}
+          src={userProfile.avatarUrl || 'https://via.placeholder.com/150'} // Usamos avatarUrl en lugar de avatarBase64
           alt="Admin User"
           sx={{ width: 100, height: 100, mb: 1 }}
         />

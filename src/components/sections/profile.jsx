@@ -4,8 +4,8 @@ import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
 import axios from 'axios';
 
-const API_URL = `${import.meta.env.VITE_API_URL}/profile/me`;
-const UPDATE_PROFILE_URL = `${import.meta.env.VITE_API_URL}/profile/me`;
+const API_URL = `${import.meta.env.VITE_API_URL}/usuarios/me`;
+const UPDATE_PROFILE_URL = `${import.meta.env.VITE_API_URL}/usuarios/me`;
 
 const initialProfile = {
   nombre: '',
@@ -29,16 +29,20 @@ const ProfileSection = () => {
           Authorization: `Bearer ${token}`,
         },
       });
+  
+      const publicUrl = import.meta.env.VITE_PUBLIC_URL;
       const profileData = {
         ...response.data,
-        avatarBase64: response.data.avatarBase64 ? `data:image/jpeg;base64,${response.data.avatarBase64}` : '',
+        avatarUrl: response.data.avatar ? `${publicUrl}${response.data.avatar}` : '', // Concatenamos la IP pública con la ruta de la imagen
       };
+      console.log(profileData);
       setProfile(profileData);
       setProfileSettings(profileData);
     } catch (error) {
       console.error('Error fetching profile:', error);
     }
   };
+  
 
   useEffect(() => {
     fetchProfile(); // Se llama cada vez que se monta la vista para obtener el perfil actualizado
@@ -55,38 +59,37 @@ const ProfileSection = () => {
       formData.append('correo_electronico', profileSettings.correo_electronico);
       formData.append('celular', profileSettings.celular);
       formData.append('direccion', profileSettings.direccion);
-
+  
       if (avatarFile) {
-        formData.append('avatar', avatarFile); // Asegúrate de que 'avatar' es lo que espera el backend
+        formData.append('avatar', avatarFile, avatarFile.name); // Incluye el nombre del archivo
       }
-
+  
+      console.log('FormData enviado:', formData); // Verifica que los datos estén completos
+  
       const response = await axios.put(UPDATE_PROFILE_URL, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data',
+          'Content-Type': 'multipart/form-data', // Especifica que se está enviando como multipart/form-data
         },
       });
-
-      const profileData = {
-        ...response.data,
-        avatarBase64: response.data.avatarBase64 ? `data:image/jpeg;base64,${response.data.avatarBase64}` : '',
-      };
-      setProfile(profileData);
-      setProfileSettings(profileData);
-      setIsEditing(false);
+  
+      // Manejar respuesta
     } catch (error) {
       console.error('Error updating profile:', error);
     }
   };
-
+  
   const handleChange = (e) => {
     const { name, value } = e.target;
     setProfileSettings({ ...profileSettings, [name]: value });
   };
 
   const handleAvatarChange = (e) => {
-    setAvatarFile(e.target.files[0]);
+    const file = e.target.files[0];
+    console.log('Avatar seleccionado:', file); // <-- Verifica si el archivo se está seleccionando
+    setAvatarFile(file);
   };
+  
 
   const validateBase64Image = (base64String) => {
     const regex = /^data:image\/(?:jpeg|jpg|png);base64,/;
@@ -98,8 +101,8 @@ const ProfileSection = () => {
       <Card sx={{ mb: 3 }}>
         <CardContent>
           <Box display="flex" flexDirection="column" alignItems="center">
-            <Avatar
-              src={validateBase64Image(profile.avatarBase64) ? profile.avatarBase64 : 'https://via.placeholder.com/150'}
+          <Avatar
+              src={profile.avatarUrl ? profile.avatarUrl : 'https://via.placeholder.com/150'}
               alt="Profile Picture"
               sx={{ width: 120, height: 120, border: '4px solid', borderColor: 'primary.main', mb: 2 }}
             />

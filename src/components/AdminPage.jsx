@@ -1,4 +1,3 @@
-// AdminPage.jsx
 import React, { useState, useEffect } from 'react';
 import { Box, CssBaseline, IconButton } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
@@ -17,7 +16,7 @@ import EventsSection from './sections/events';
 import Feed from './sections/Feed';
 
 const drawerWidth = 280;
-const API_URL = `${import.meta.env.VITE_API_URL}/profile/me`;
+const API_URL = `${import.meta.env.VITE_API_URL}/usuarios/me`;
 
 const sections = [
   { id: 'profile', label: 'Perfil' },
@@ -33,7 +32,7 @@ const sections = [
 const AdminPage = () => {
   const [activeSection, setActiveSection] = useState('profile');
   const [chatSidebarOpen, setChatSidebarOpen] = useState(false);
-  const [userProfile, setUserProfile] = useState({ nombre: '', avatarBase64: '' });
+  const [userProfile, setUserProfile] = useState({ nombre: '', avatarUrl: '' });
   const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -46,9 +45,12 @@ const AdminPage = () => {
             Authorization: `Bearer ${token}`,
           },
         });
+
+        // Construimos la URL completa para el avatar, similar a como lo haces en el componente de perfil
+        const publicUrl = import.meta.env.VITE_PUBLIC_URL;
         const profileData = {
           ...response.data,
-          avatarBase64: response.data.avatarBase64 ? `data:image/jpeg;base64,${response.data.avatarBase64}` : '',
+          avatarUrl: response.data.avatar ? `${publicUrl}${response.data.avatar}` : '', // Construir la URL completa de la imagen
         };
         setUserProfile(profileData);
       } catch (error) {
@@ -88,7 +90,7 @@ const AdminPage = () => {
       <Sidebar
         activeSection={activeSection}
         handleSectionChange={handleSectionChange}
-        userProfile={userProfile}
+        userProfile={userProfile} // Pasamos el perfil actualizado con la URL del avatar
         mobileOpen={mobileOpen}
         handleDrawerToggle={handleDrawerToggle}
       />

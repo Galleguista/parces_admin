@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Card, CardHeader, CardContent, CardActions, Avatar, IconButton, Typography, Container, Grid, TextField, Button } from '@mui/material';
+import { Container, Grid, Box, Card, CardHeader, CardContent, CardActions, Avatar, IconButton, Typography, TextField, Button } from '@mui/material';
 import { Favorite, Share, MoreVert, ChatBubbleOutline, Send } from '@mui/icons-material';
 import axios from 'axios';
 
-const API_URL = `${import.meta.env.VITE_API_URL}/admin/muro`;
+const API_URL = `${import.meta.env.VITE_API_URL}/muro`;
+const FILES_URL = `${import.meta.env.VITE_FILES_URL}/files`;
 
 const PostCard = ({ post }) => (
   <Card sx={{ mb: 2, borderRadius: 2, boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)', overflow: 'hidden' }}>
     <CardHeader
-      avatar={<Avatar src={post.usuario?.avatar ? `data:image/jpeg;base64,${post.usuario.avatar}` : 'https://via.placeholder.com/40'} sx={{ width: 40, height: 40 }} />}
+      avatar={<Avatar src={post.usuario?.avatar ? `${FILES_URL}${post.usuario.avatar}` : 'https://via.placeholder.com/40'} sx={{ width: 40, height: 40 }} />}
       action={
         <IconButton aria-label="settings">
           <MoreVert />
@@ -24,7 +25,7 @@ const PostCard = ({ post }) => (
     </CardContent>
     {post.imagen_url && (
       <Box component="div" sx={{ p: 0, backgroundColor: 'rgba(0, 0, 0, 0.03)' }}>
-        <img src={`data:image/jpeg;base64,${post.imagen_url}`} alt="" style={{ width: '100%', borderRadius: '0 0 8px 8px' }} />
+        <img src={`${FILES_URL}${post.imagen_url}`} alt="" style={{ width: '100%', borderRadius: '0 0 8px 8px' }} />
       </Box>
     )}
     <CardActions disableSpacing sx={{ paddingTop: 0 }}>
@@ -38,7 +39,7 @@ const PostCard = ({ post }) => (
         <ChatBubbleOutline fontSize="small" />
       </IconButton>
     </CardActions>
-  </Card> 
+  </Card>
 );
 
 const NewPostCard = ({ onPostCreated, user }) => {
@@ -60,6 +61,10 @@ const NewPostCard = ({ onPostCreated, user }) => {
       formData.append('imagen', newPost.imagen);
     }
 
+    // Agregar console.log para ver el contenido del formData
+    console.log('Contenido:', newPost.contenido);
+    console.log('Imagen:', newPost.imagen);
+
     try {
       const response = await axios.post(`${API_URL}/create`, formData, {
         headers: {
@@ -67,17 +72,22 @@ const NewPostCard = ({ onPostCreated, user }) => {
           'Content-Type': 'multipart/form-data',
         },
       });
+
+      // Log del response en caso de éxito
+      console.log('Respuesta del backend:', response.data);
+
       onPostCreated(response.data);
       setNewPost({ contenido: '', imagen: null });
     } catch (error) {
-      console.error('Error creating post:', error);
+      // Log del error en caso de fallo
+      console.error('Error al crear la publicación:', error.response ? error.response.data : error.message);
     }
   };
 
   return (
     <Card sx={{ mb: 2, borderRadius: 2, boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)', overflow: 'hidden' }}>
       <CardHeader
-        avatar={<Avatar src={user?.avatar ? user.avatar : 'https://via.placeholder.com/40'} sx={{ width: 40, height: 40 }} />}
+        avatar={<Avatar src={user?.avatar ? `${FILES_URL}${user.avatar}` : 'https://via.placeholder.com/40'} sx={{ width: 40, height: 40 }} />}
         title={<Typography variant="h6" sx={{ fontSize: '1rem' }}>What's on your mind?</Typography>}
       />
       <CardContent>
@@ -110,20 +120,20 @@ const Feed = () => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_API_URL}/users/me`, {
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/usuarios/me`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`,  
           },
         });
         setUser({
           ...response.data,
-          avatar: response.data.avatar ? `data:image/jpeg;base64,${response.data.avatar}` : null,
+          avatar: response.data.avatar ? response.data.avatar : null,
         });
       } catch (error) {
         console.error('Error fetching user data:', error);
       }
     };
-  
+
     const fetchPublicaciones = async () => {
       try {
         const response = await axios.get(`${API_URL}/publicaciones`, {
