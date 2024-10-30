@@ -7,7 +7,7 @@ import Navbar from './main/NavBar';
 import Sidebar from './main/Sidebar';
 import ChatSidebar from './sections/ChatSidebar';
 import ProfileSection from './sections/profile';
-import ProjectsSection from './sections/projects';
+import ProjectsSection from './sections/project_section/projects';
 import GroupsSection from './sections/groups';
 import ResourcesSection from './sections/resources';
 import AchievementsSection from './sections/achievements';
