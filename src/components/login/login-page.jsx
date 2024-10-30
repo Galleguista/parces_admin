@@ -1,34 +1,33 @@
 import React, { useState } from 'react';
 import { Container, Box, Card, CardContent, TextField, Button, Typography, Avatar, CssBaseline, Link } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
-import { useNavigate } from 'react-router-dom'; // Importa useNavigate
+import { ThemeProvider } from '@mui/material/styles';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-
-const theme = createTheme();
+import theme from '../../theme';
 
 const LoginPage = ({ onLogin, onShowRegister }) => {
-  const [username, setUsername] = useState('');
+  const [correoElectronico, setCorreoElectronico] = useState('');
   const [password, setPassword] = useState('');
-  const navigate = useNavigate(); // Definir navigate con useNavigate
+  const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    console.log('Login attempt with:', { username, password });
+    console.log('Intento de inicio de sesión con:', { correoElectronico, password });
     try {
       const response = await axios.post(`${import.meta.env.VITE_API_URL}/auth/login`, {
-        correo_electronico: username,
+        correo_electronico: correoElectronico,
         password: password,
       });
-      console.log('Response from backend:', response);
+      console.log('Respuesta del backend:', response);
       const { access_token } = response.data;
-      console.log('Access token received:', access_token);
+      console.log('Token de acceso recibido:', access_token);
       localStorage.setItem('token', access_token);
       onLogin();
-      navigate('/admin'); // Usar navigate para redirigir a /admin
+      navigate('/admin');
     } catch (error) {
-      console.error('Error during login:', error);
-      alert('Invalid credentials');
+      console.error('Error durante el inicio de sesión:', error);
+      alert('Credenciales inválidas');
     }
   };
 
@@ -53,31 +52,29 @@ const LoginPage = ({ onLogin, onShowRegister }) => {
                   alignItems: 'center',
                 }}
               >
-                <Avatar sx={{ m: 1, bgcolor: 'secondary.main' }}>
-                  <LockOutlinedIcon />
-                </Avatar>
+                <img src="/logo.png" alt="Logo" style={{ width: 100, marginBottom: 16 }} /> {/* Logo desde la carpeta public */}
                 <Typography component="h1" variant="h5">
-                  Parcers Login
+                  Inicio de Sesión
                 </Typography>
                 <Box component="form" onSubmit={handleLogin} sx={{ mt: 1, width: '100%' }}>
                   <TextField
                     margin="normal"
                     required
                     fullWidth
-                    id="username"
-                    label="Username"
-                    name="username"
-                    autoComplete="username"
+                    id="correoElectronico"
+                    label="Correo Electrónico"
+                    name="correoElectronico"
+                    autoComplete="email"
                     autoFocus
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
+                    value={correoElectronico}
+                    onChange={(e) => setCorreoElectronico(e.target.value)}
                   />
                   <TextField
                     margin="normal"
                     required
                     fullWidth
                     name="password"
-                    label="Password"
+                    label="Contraseña"
                     type="password"
                     id="password"
                     autoComplete="current-password"
@@ -90,10 +87,10 @@ const LoginPage = ({ onLogin, onShowRegister }) => {
                     variant="contained"
                     sx={{ mt: 3, mb: 2 }}
                   >
-                    Login
+                    Iniciar Sesión
                   </Button>
                   <Link href="/register" variant="body2" onClick={onShowRegister}>
-                    {"Don't have an account? Create one"}
+                    {"¿No tienes una cuenta? Crea una"}
                   </Link>
                 </Box>
               </Box>

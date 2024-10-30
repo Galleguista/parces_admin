@@ -13,22 +13,19 @@ const RegisterPage = ({ onRegister }) => {
   const [password, setPassword] = useState('');
   const [celular, setCelular] = useState('');
   const [direccion, setDireccion] = useState('');
-  const [errors, setErrors] = useState({}); // Estado para los errores de validación
-  const [open, setOpen] = useState(false); // Estado para el modal de éxito
+  const [errors, setErrors] = useState({});
+  const [open, setOpen] = useState(false);
   const navigate = useNavigate();
 
-  // Validación simple para el correo
   const isValidEmail = (email) => {
     const re = /\S+@\S+\.\S+/;
     return re.test(email);
   };
 
-  // Validación de contraseña (ejemplo: al menos 6 caracteres)
   const isValidPassword = (password) => {
     return password.length >= 6;
   };
 
-  // Validar un campo y actualizar los errores
   const validateField = (name, value) => {
     let errorMessage = '';
 
@@ -55,7 +52,6 @@ const RegisterPage = ({ onRegister }) => {
     setErrors((prevErrors) => ({ ...prevErrors, [name]: errorMessage }));
   };
 
-  // Manejar el cambio en cada campo y validar
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name === 'nombre') setNombre(value);
@@ -64,15 +60,12 @@ const RegisterPage = ({ onRegister }) => {
     if (name === 'celular') setCelular(value);
     if (name === 'direccion') setDireccion(value);
 
-    // Validación en tiempo real
     validateField(name, value);
   };
 
-  // Manejar el envío del formulario
   const handleRegister = async (e) => {
     e.preventDefault();
 
-    // Validaciones finales cuando se intenta enviar el formulario
     let newErrors = {};
     if (!nombre) {
       newErrors.nombre = 'El nombre es obligatorio';
@@ -86,7 +79,6 @@ const RegisterPage = ({ onRegister }) => {
 
     setErrors(newErrors);
 
-    // Si hay errores, no continuar con la solicitud
     if (Object.keys(newErrors).length > 0) return;
 
     const status = true;
@@ -102,17 +94,16 @@ const RegisterPage = ({ onRegister }) => {
 
       if (response.data.success) {
         onRegister();
-        setOpen(true); // Muestra la ventana de registro exitoso
+        setOpen(true);
       } else {
-        alert(response.data.message); // Muestra el mensaje de error devuelto por el backend
+        alert(response.data.message);
       }
     } catch (error) {
-      console.error('Error during registration:', error);
+      console.error('Error durante el registro:', error);
       alert('Error durante el registro. Verifique su información o intente nuevamente.');
     }
   };
 
-  // Función para cerrar el modal y redirigir al login
   const handleClose = () => {
     setOpen(false);
     navigate('/login');
@@ -143,7 +134,7 @@ const RegisterPage = ({ onRegister }) => {
                   <LockOutlinedIcon />
                 </Avatar>
                 <Typography component="h1" variant="h5">
-                  Register
+                  Registro
                 </Typography>
                 <Box component="form" onSubmit={handleRegister} sx={{ mt: 1, width: '100%' }}>
                   <TextField
@@ -151,7 +142,7 @@ const RegisterPage = ({ onRegister }) => {
                     required
                     fullWidth
                     id="nombre"
-                    label="Name"
+                    label="Nombre"
                     name="nombre"
                     autoComplete="nombre"
                     autoFocus
@@ -166,7 +157,7 @@ const RegisterPage = ({ onRegister }) => {
                     required
                     fullWidth
                     id="correoElectronico"
-                    label="Email Address"
+                    label="Correo Electrónico"
                     name="correoElectronico"
                     autoComplete="email"
                     value={correoElectronico}
@@ -180,7 +171,7 @@ const RegisterPage = ({ onRegister }) => {
                     required
                     fullWidth
                     name="password"
-                    label="Password"
+                    label="Contraseña"
                     type="password"
                     id="password"
                     autoComplete="current-password"
@@ -194,7 +185,7 @@ const RegisterPage = ({ onRegister }) => {
                     margin="normal"
                     fullWidth
                     id="celular"
-                    label="Phone"
+                    label="Celular"
                     name="celular"
                     autoComplete="celular"
                     value={celular}
@@ -204,7 +195,7 @@ const RegisterPage = ({ onRegister }) => {
                     margin="normal"
                     fullWidth
                     id="direccion"
-                    label="Address"
+                    label="Dirección"
                     name="direccion"
                     autoComplete="direccion"
                     value={direccion}
@@ -216,7 +207,7 @@ const RegisterPage = ({ onRegister }) => {
                     variant="contained"
                     sx={{ mt: 3, mb: 2 }}
                   >
-                    Register
+                    Registrarse
                   </Button>
                 </Box>
               </Box>
