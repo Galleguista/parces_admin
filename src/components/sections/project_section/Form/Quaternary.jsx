@@ -1,24 +1,32 @@
 // project_section/Form/Quaternary.js
-import React, { useState } from 'react';
-import { Box, Typography, Button, Radio, RadioGroup, FormControl, FormControlLabel, FormLabel } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { Box, Typography, Button, Radio, RadioGroup, FormControl, FormControlLabel, FormLabel, Grid } from '@mui/material';
 
-const Quaternary = ({ onNext, onPrevious }) => {
+const Quaternary = ({ onNext, onPrevious, initialValues }) => {
   const [formValues, setFormValues] = useState({
     modalidadParticipacion: '',
     modeloReparto: '',
+    ...initialValues, // Valores iniciales desde el estado global
   });
+
+  useEffect(() => {
+    setFormValues((prevValues) => ({
+      ...prevValues,
+      ...initialValues, // Actualiza cuando initialValues cambie
+    }));
+  }, [initialValues]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormValues({ ...formValues, [name]: value });
+    setFormValues((prevValues) => ({ ...prevValues, [name]: value }));
   };
 
   const handleNext = () => {
-    onNext(formValues); // Envía los valores al componente principal y avanza a la siguiente sección
+    onNext(formValues); // Envía los valores al estado global
   };
 
   return (
-    <Box sx={{ padding: 3, borderRadius: 2, boxShadow: 1 }}>
+    <Box sx={{ padding: { xs: 2, md: 3 }, borderRadius: 2, boxShadow: 1 }}>
       <Typography variant="h5" gutterBottom>Modalidad de Aparcería</Typography>
 
       <FormControl component="fieldset" sx={{ marginBottom: 3 }}>
@@ -28,9 +36,17 @@ const Quaternary = ({ onNext, onPrevious }) => {
           value={formValues.modalidadParticipacion}
           onChange={handleInputChange}
         >
-          <FormControlLabel value="Participación Activa (presencial)" control={<Radio />} label="Participación Activa (presencial)" />
-          <FormControlLabel value="Participación Remota (si aplica)" control={<Radio />} label="Participación Remota (si aplica)" />
-          <FormControlLabel value="Participación Activa y Remota" control={<Radio />} label="Participación Activa y Remota" />
+          <Grid container spacing={2}>
+            {["Participación Activa (presencial)", "Participación Remota (si aplica)", "Participación Activa y Remota"].map((option, index) => (
+              <Grid item xs={12} sm={6} key={index}>
+                <FormControlLabel
+                  value={option}
+                  control={<Radio />}
+                  label={option}
+                />
+              </Grid>
+            ))}
+          </Grid>
         </RadioGroup>
       </FormControl>
 
@@ -41,10 +57,17 @@ const Quaternary = ({ onNext, onPrevious }) => {
           value={formValues.modeloReparto}
           onChange={handleInputChange}
         >
-          <FormControlLabel value="Reparto equitativo según los aportes" control={<Radio />} label="Reparto equitativo según los aportes" />
-          <FormControlLabel value="Reparto proporcional a la inversión" control={<Radio />} label="Reparto proporcional a la inversión" />
-          <FormControlLabel value="Acuerdo consensuado" control={<Radio />} label="Acuerdo consensuado" />
-          <FormControlLabel value="Otro" control={<Radio />} label="Otro" />
+          <Grid container spacing={2}>
+            {["Reparto equitativo según los aportes", "Reparto proporcional a la inversión", "Acuerdo consensuado", "Otro"].map((option, index) => (
+              <Grid item xs={12} sm={6} key={index}>
+                <FormControlLabel
+                  value={option}
+                  control={<Radio />}
+                  label={option}
+                />
+              </Grid>
+            ))}
+          </Grid>
         </RadioGroup>
       </FormControl>
 

@@ -1,16 +1,24 @@
 // project_section/Form/Tertiary.js
-import React, { useState } from 'react';
-import { Box, TextField, Typography, Button, Radio, RadioGroup, FormControl, FormControlLabel, FormLabel } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { Box, TextField, Typography, Button, Radio, RadioGroup, FormControl, FormControlLabel, FormLabel, Grid } from '@mui/material';
 
-const Tertiary = ({ onNext, onPrevious }) => {
+const Tertiary = ({ onNext, onPrevious, initialValues }) => {
   const [formValues, setFormValues] = useState({
     aportesParticipantes: '',
     recursosDisponibles: '',
+    ...initialValues, // Inicializa con valores existentes si están disponibles
   });
+
+  useEffect(() => {
+    setFormValues((prevValues) => ({
+      ...prevValues,
+      ...initialValues, // Actualiza los valores cuando initialValues cambie
+    }));
+  }, [initialValues]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormValues({ ...formValues, [name]: value });
+    setFormValues((prevValues) => ({ ...prevValues, [name]: value }));
   };
 
   const handleNext = () => {
@@ -18,7 +26,7 @@ const Tertiary = ({ onNext, onPrevious }) => {
   };
 
   return (
-    <Box sx={{ padding: 3, borderRadius: 2, boxShadow: 1 }}>
+    <Box sx={{ padding: { xs: 2, md: 3 }, borderRadius: 2, boxShadow: 1 }}>
       <Typography variant="h5" gutterBottom>Participación y Recursos</Typography>
 
       <FormControl component="fieldset" sx={{ marginBottom: 3 }}>
@@ -28,14 +36,17 @@ const Tertiary = ({ onNext, onPrevious }) => {
           value={formValues.aportesParticipantes}
           onChange={handleInputChange}
         >
-          {["Mano de Obra", "Insumos", "Terrenos", "Financiamiento", "Maquinaria y Equipos", "Asistencia Técnica", "Infraestructura", "Otros"].map((option, index) => (
-            <FormControlLabel
-              key={index}
-              value={option}
-              control={<Radio />}
-              label={option}
-            />
-          ))}
+          <Grid container spacing={2}>
+            {["Mano de Obra", "Insumos", "Terrenos", "Financiamiento", "Maquinaria y Equipos", "Asistencia Técnica", "Infraestructura", "Otros"].map((option, index) => (
+              <Grid item xs={12} sm={6} key={index}>
+                <FormControlLabel
+                  value={option}
+                  control={<Radio />}
+                  label={option}
+                />
+              </Grid>
+            ))}
+          </Grid>
         </RadioGroup>
       </FormControl>
 
@@ -49,7 +60,7 @@ const Tertiary = ({ onNext, onPrevious }) => {
         rows={4}
         value={formValues.recursosDisponibles}
         onChange={handleInputChange}
-        sx={{ marginBottom: 2 }}
+        sx={{ marginBottom: { xs: 1, md: 2 } }}
       />
 
       <Box sx={{ display: 'flex', justifyContent: 'space-between', marginTop: 2 }}>

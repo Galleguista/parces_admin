@@ -1,19 +1,27 @@
 // project_section/Form/First.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, TextField, Typography, Button, Radio, RadioGroup, FormControl, FormControlLabel, FormLabel, Grid } from '@mui/material';
 import { Agriculture, Pets, EmojiNature, LocalFlorist, Waves, Hive, Spa, Business } from '@mui/icons-material';
 
-const First = ({ onNext }) => {
+const First = ({ onNext, initialValues }) => {
   const [formValues, setFormValues] = useState({
     nombre: '',
     descripcion: '',
     ubicacion: '',
     tipoAparceria: '',
+    ...initialValues, // Carga valores iniciales al cargar el componente
   });
+
+  useEffect(() => {
+    setFormValues((prevValues) => ({
+      ...prevValues,
+      ...initialValues, // Actualiza los valores en caso de cambios en initialValues
+    }));
+  }, [initialValues]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormValues({ ...formValues, [name]: value });
+    setFormValues((prevValues) => ({ ...prevValues, [name]: value }));
   };
 
   const handleNext = () => {

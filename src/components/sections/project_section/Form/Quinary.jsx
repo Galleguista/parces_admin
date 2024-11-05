@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Box, TextField, Typography, Button, FormControlLabel, Checkbox, Radio, RadioGroup, FormLabel, Grid } from '@mui/material';
 import { Agriculture, Pets, EmojiNature, Waves, Hive } from '@mui/icons-material';
 
-const Quinary = ({ onNext, onPrevious }) => {
+const Quinary = ({ onNext, onPrevious, initialValues }) => {
   const [formValues, setFormValues] = useState({
     nombreEncargado: '',
     correoContacto: '',
@@ -11,7 +11,8 @@ const Quinary = ({ onNext, onPrevious }) => {
     aceptarTerminos: false,
     publicarComunidad: false,
     archivos: [],
-    iconoSeleccionado: '', // Campo para el ícono seleccionado
+    iconoSeleccionado: '',
+    ...initialValues, // Cargar valores iniciales si existen
   });
 
   const handleInputChange = (e) => {
@@ -29,7 +30,7 @@ const Quinary = ({ onNext, onPrevious }) => {
   };
 
   return (
-    <Box sx={{ padding: 3, borderRadius: 2, boxShadow: 1 }}>
+    <Box sx={{ padding: { xs: 2, md: 3 }, borderRadius: 2, boxShadow: 1 }}>
       <Typography variant="h5" gutterBottom>Contacto y Publicación</Typography>
 
       <Typography variant="subtitle1" gutterBottom>Nombre del Encargado:</Typography>
