@@ -4,9 +4,9 @@ import { Box, TextField, Typography, Button, Grid } from '@mui/material';
 
 const Secondary = ({ onNext, onPrevious, initialValues }) => {
   const [formValues, setFormValues] = useState({
-    tamanoTerreno: '',
-    duracionProyecto: '',
-    numeroParticipantes: '',
+    tamano_terreno: '',
+    duracion_proyecto: '',
+    numero_participantes: '',
     ...initialValues, // Inicializa con valores existentes si están disponibles
   });
 
@@ -23,6 +23,11 @@ const Secondary = ({ onNext, onPrevious, initialValues }) => {
   };
 
   const handleNext = () => {
+    // Validación para asegurar que no haya campos vacíos
+    if (!formValues.tamano_terreno || !formValues.duracion_proyecto || !formValues.numero_participantes) {
+      alert("Por favor completa todos los campos antes de continuar.");
+      return;
+    }
     onNext(formValues); // Envía los valores al componente principal y avanza a la siguiente sección
   };
 
@@ -34,10 +39,10 @@ const Secondary = ({ onNext, onPrevious, initialValues }) => {
           <Typography variant="subtitle1" gutterBottom>Tamaño del Terreno:</Typography>
           <TextField
             fullWidth
-            name="tamanoTerreno"
+            name="tamano_terreno"
             variant="outlined"
             placeholder="Indica el tamaño del terreno en hectáreas."
-            value={formValues.tamanoTerreno}
+            value={formValues.tamano_terreno}
             onChange={handleInputChange}
             sx={{ marginBottom: { xs: 1, md: 2 } }}
           />
@@ -47,10 +52,10 @@ const Secondary = ({ onNext, onPrevious, initialValues }) => {
           <Typography variant="subtitle1" gutterBottom>Duración del Proyecto:</Typography>
           <TextField
             fullWidth
-            name="duracionProyecto"
+            name="duracion_proyecto"
             variant="outlined"
             placeholder="Duración estimada en meses o años."
-            value={formValues.duracionProyecto}
+            value={formValues.duracion_proyecto}
             onChange={handleInputChange}
             sx={{ marginBottom: { xs: 1, md: 2 } }}
           />
@@ -60,10 +65,10 @@ const Secondary = ({ onNext, onPrevious, initialValues }) => {
           <Typography variant="subtitle1" gutterBottom>Número de Participantes Esperados:</Typography>
           <TextField
             fullWidth
-            name="numeroParticipantes"
+            name="numero_participantes"
             variant="outlined"
             placeholder="Número máximo de participantes o interesados en el proyecto."
-            value={formValues.numeroParticipantes}
+            value={formValues.numero_participantes}
             onChange={handleInputChange}
             sx={{ marginBottom: { xs: 1, md: 2 } }}
           />

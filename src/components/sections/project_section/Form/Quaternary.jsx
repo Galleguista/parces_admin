@@ -4,8 +4,8 @@ import { Box, Typography, Button, Radio, RadioGroup, FormControl, FormControlLab
 
 const Quaternary = ({ onNext, onPrevious, initialValues }) => {
   const [formValues, setFormValues] = useState({
-    modalidadParticipacion: '',
-    modeloReparto: '',
+    modalidad_participacion: '',
+    modelo_reparto: '',
     ...initialValues, // Valores iniciales desde el estado global
   });
 
@@ -32,8 +32,8 @@ const Quaternary = ({ onNext, onPrevious, initialValues }) => {
       <FormControl component="fieldset" sx={{ marginBottom: 3 }}>
         <FormLabel component="legend">Modalidad de Participación:</FormLabel>
         <RadioGroup
-          name="modalidadParticipacion"
-          value={formValues.modalidadParticipacion}
+          name="modalidad_participacion" // Ajustado para coincidir con el nombre en la base de datos
+          value={formValues.modalidad_participacion}
           onChange={handleInputChange}
         >
           <Grid container spacing={2}>
@@ -53,8 +53,8 @@ const Quaternary = ({ onNext, onPrevious, initialValues }) => {
       <FormControl component="fieldset" sx={{ marginBottom: 3 }}>
         <FormLabel component="legend">Modelo de Reparto de Beneficios:</FormLabel>
         <RadioGroup
-          name="modeloReparto"
-          value={formValues.modeloReparto}
+          name="modelo_reparto" // Ajustado para coincidir con el nombre en la base de datos
+          value={formValues.modelo_reparto}
           onChange={handleInputChange}
         >
           <Grid container spacing={2}>

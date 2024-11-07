@@ -1,21 +1,28 @@
-// project_section/ProjectDetails.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  Dialog, DialogContent, DialogTitle, Typography, Box, Grid, Chip, Divider, Avatar, IconButton, Tooltip, Paper, TextField, Button, Checkbox, FormControlLabel
+  Dialog, DialogContent, DialogTitle, Typography, Box, Grid, Divider, Avatar, IconButton, Tooltip, Paper, TextField, Button, Checkbox, FormControlLabel
 } from '@mui/material';
-import { AccountCircle, LocationOn, CalendarToday, ContactMail, EmojiObjects, Nature, People, Info, Description, AttachFile, Edit, CheckCircle } from '@mui/icons-material';
+import { ContactMail, Info, Nature, People, LocationOn, AttachFile, Edit } from '@mui/icons-material';
 
 const ProjectDetails = ({ project, onClose, onUpdateProject }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedProject, setEditedProject] = useState({ ...project });
 
+  // Log the project data on initial load
+  useEffect(() => {
+    console.log("Project data loaded into ProjectDetails component:", project);
+    setEditedProject({ ...project });
+  }, [project]);
+
   const handleEditToggle = () => {
     setIsEditing(!isEditing);
-    setEditedProject({ ...project });
+    console.log("Toggle edit mode. Now editing:", isEditing);
+    setEditedProject({ ...project }); // Reset to initial project data on toggle
   };
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
+    console.log(`Field changed: ${name} = ${value}`);
     setEditedProject({
       ...editedProject,
       [name]: value,
@@ -23,14 +30,15 @@ const ProjectDetails = ({ project, onClose, onUpdateProject }) => {
   };
 
   const handleSaveChanges = () => {
+    console.log("Saving changes for project:", editedProject);
     onUpdateProject(editedProject);
     setIsEditing(false);
   };
 
   const renderFileIcon = (fileType) => {
-    if (fileType.includes('pdf')) return <Description color="error" />;
+    console.log("Rendering icon for file type:", fileType);
+    if (fileType.includes('pdf')) return <AttachFile color="error" />;
     if (fileType.includes('image')) return <AttachFile color="primary" />;
-    if (fileType.includes('word') || fileType.includes('doc')) return <Description color="action" />;
     return <AttachFile color="disabled" />;
   };
 
@@ -87,8 +95,8 @@ const ProjectDetails = ({ project, onClose, onUpdateProject }) => {
               Detalles del Proyecto
             </Typography>
             <Paper elevation={2} sx={{ padding: 2 }}>
-              <Typography variant="body1"><strong>Tamaño del Terreno:</strong> {isEditing ? <TextField name="terreno_tamano" value={editedProject.terreno_tamano} onChange={handleInputChange} fullWidth /> : project.terreno_tamano}</Typography>
-              <Typography variant="body1"><strong>Duración:</strong> {isEditing ? <TextField name="duracion" value={editedProject.duracion} onChange={handleInputChange} fullWidth /> : project.duracion}</Typography>
+              <Typography variant="body1"><strong>Tamaño del Terreno:</strong> {isEditing ? <TextField name="tamano_terreno" value={editedProject.tamano_terreno} onChange={handleInputChange} fullWidth /> : project.tamano_terreno}</Typography>
+              <Typography variant="body1"><strong>Duración:</strong> {isEditing ? <TextField name="duracion_proyecto" value={editedProject.duracion_proyecto} onChange={handleInputChange} fullWidth /> : project.duracion_proyecto}</Typography>
               <Typography variant="body1"><strong>Participantes Esperados:</strong> {isEditing ? <TextField name="numero_participantes" value={editedProject.numero_participantes} onChange={handleInputChange} fullWidth /> : project.numero_participantes}</Typography>
             </Paper>
           </Grid>
@@ -100,7 +108,7 @@ const ProjectDetails = ({ project, onClose, onUpdateProject }) => {
               Participación y Recursos
             </Typography>
             <Paper elevation={2} sx={{ padding: 2 }}>
-              <Typography variant="body1"><strong>Aportes Esperados:</strong> {isEditing ? <TextField name="aportes_esperados" value={editedProject.aportes_esperados} onChange={handleInputChange} fullWidth /> : project.aportes_esperados}</Typography>
+              <Typography variant="body1"><strong>Aportes Esperados:</strong> {isEditing ? <TextField name="aportes_participantes" value={editedProject.aportes_participantes} onChange={handleInputChange} fullWidth /> : project.aportes_participantes}</Typography>
               <Typography variant="body1"><strong>Recursos Disponibles:</strong> {isEditing ? <TextField name="recursos_disponibles" value={editedProject.recursos_disponibles} onChange={handleInputChange} fullWidth multiline rows={2} /> : project.recursos_disponibles}</Typography>
             </Paper>
           </Grid>
@@ -112,7 +120,7 @@ const ProjectDetails = ({ project, onClose, onUpdateProject }) => {
               Modalidad de Aparcería
             </Typography>
             <Paper elevation={2} sx={{ padding: 2 }}>
-              <Typography variant="body1"><strong>Modalidad:</strong> {isEditing ? <TextField name="modalidad" value={editedProject.modalidad} onChange={handleInputChange} fullWidth /> : project.modalidad}</Typography>
+              <Typography variant="body1"><strong>Modalidad:</strong> {isEditing ? <TextField name="modalidad_participacion" value={editedProject.modalidad_participacion} onChange={handleInputChange} fullWidth /> : project.modalidad_participacion}</Typography>
               <Typography variant="body1"><strong>Modelo de Reparto:</strong> {isEditing ? <TextField name="modelo_reparto" value={editedProject.modelo_reparto} onChange={handleInputChange} fullWidth /> : project.modelo_reparto}</Typography>
             </Paper>
           </Grid>
@@ -124,15 +132,15 @@ const ProjectDetails = ({ project, onClose, onUpdateProject }) => {
               Contacto y Publicación
             </Typography>
             <Paper elevation={2} sx={{ padding: 2 }}>
-              <Typography variant="body1"><strong>Nombre del Encargado:</strong> {isEditing ? <TextField name="contacto_nombre" value={editedProject.contacto_nombre} onChange={handleInputChange} fullWidth /> : project.contacto_nombre}</Typography>
-              <Typography variant="body1"><strong>Correo Electrónico:</strong> {isEditing ? <TextField name="contacto_correo" value={editedProject.contacto_correo} onChange={handleInputChange} fullWidth /> : project.contacto_correo}</Typography>
-              <Typography variant="body1"><strong>Teléfono:</strong> {isEditing ? <TextField name="contacto_telefono" value={editedProject.contacto_telefono} onChange={handleInputChange} fullWidth /> : project.contacto_telefono}</Typography>
+              <Typography variant="body1"><strong>Nombre del Encargado:</strong> {isEditing ? <TextField name="nombre_encargado" value={editedProject.nombre_encargado} onChange={handleInputChange} fullWidth /> : project.nombre_encargado}</Typography>
+              <Typography variant="body1"><strong>Correo Electrónico:</strong> {isEditing ? <TextField name="correo_contacto" value={editedProject.correo_contacto} onChange={handleInputChange} fullWidth /> : project.correo_contacto}</Typography>
+              <Typography variant="body1"><strong>Teléfono:</strong> {isEditing ? <TextField name="telefono_contacto" value={editedProject.telefono_contacto} onChange={handleInputChange} fullWidth /> : project.telefono_contacto}</Typography>
               <FormControlLabel
-                control={<Checkbox checked={editedProject.publicar} onChange={() => setEditedProject({ ...editedProject, publicar: !editedProject.publicar })} />}
+                control={<Checkbox checked={editedProject.publicar_comunidad || false} onChange={() => setEditedProject({ ...editedProject, publicar_comunidad: !editedProject.publicar_comunidad })} />}
                 label="Publicar mi proyecto"
               />
               <FormControlLabel
-                control={<Checkbox checked={editedProject.aceptar_terminos} onChange={() => setEditedProject({ ...editedProject, aceptar_terminos: !editedProject.aceptar_terminos })} />}
+                control={<Checkbox checked={editedProject.aceptar_terminos || false} onChange={() => setEditedProject({ ...editedProject, aceptar_terminos: !editedProject.aceptar_terminos })} />}
                 label="Acepto los términos y condiciones"
               />
             </Paper>
@@ -161,7 +169,7 @@ const ProjectDetails = ({ project, onClose, onUpdateProject }) => {
             </Box>
           </Grid>
         </Grid>
-        
+
         {/* Botones para guardar o cancelar cambios */}
         {isEditing && (
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>

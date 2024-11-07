@@ -4,8 +4,8 @@ import { Box, TextField, Typography, Button, Radio, RadioGroup, FormControl, For
 
 const Tertiary = ({ onNext, onPrevious, initialValues }) => {
   const [formValues, setFormValues] = useState({
-    aportesParticipantes: '',
-    recursosDisponibles: '',
+    aportes_participantes: '', // Cambiado para coincidir con la base de datos
+    recursos_disponibles: '',
     ...initialValues, // Inicializa con valores existentes si están disponibles
   });
 
@@ -32,8 +32,8 @@ const Tertiary = ({ onNext, onPrevious, initialValues }) => {
       <FormControl component="fieldset" sx={{ marginBottom: 3 }}>
         <FormLabel component="legend">Aportes Esperados de los Participantes:</FormLabel>
         <RadioGroup
-          name="aportesParticipantes"
-          value={formValues.aportesParticipantes}
+          name="aportes_participantes" // Cambiado para coincidir con la base de datos
+          value={formValues.aportes_participantes}
           onChange={handleInputChange}
         >
           <Grid container spacing={2}>
@@ -53,12 +53,12 @@ const Tertiary = ({ onNext, onPrevious, initialValues }) => {
       <Typography variant="subtitle1" gutterBottom>Recursos Disponibles del Proyecto:</Typography>
       <TextField
         fullWidth
-        name="recursosDisponibles"
+        name="recursos_disponibles"
         variant="outlined"
         placeholder="Describe los recursos que ya tienes disponibles para el proyecto (equipos, capital, insumos, etc.)."
         multiline
         rows={4}
-        value={formValues.recursosDisponibles}
+        value={formValues.recursos_disponibles}
         onChange={handleInputChange}
         sx={{ marginBottom: { xs: 1, md: 2 } }}
       />

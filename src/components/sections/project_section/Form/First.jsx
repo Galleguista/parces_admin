@@ -1,14 +1,14 @@
 // project_section/Form/First.js
 import React, { useState, useEffect } from 'react';
 import { Box, TextField, Typography, Button, Radio, RadioGroup, FormControl, FormControlLabel, FormLabel, Grid } from '@mui/material';
-import { Agriculture, Pets, EmojiNature, LocalFlorist, Waves, Hive, Spa, Business } from '@mui/icons-material';
+import { Agriculture, Pets, EmojiNature, Waves, Hive, Spa, Business } from '@mui/icons-material';
 
 const First = ({ onNext, initialValues }) => {
   const [formValues, setFormValues] = useState({
     nombre: '',
     descripcion: '',
     ubicacion: '',
-    tipoAparceria: '',
+    tipo_aparceria: '',
     ...initialValues, // Carga valores iniciales al cargar el componente
   });
 
@@ -25,6 +25,11 @@ const First = ({ onNext, initialValues }) => {
   };
 
   const handleNext = () => {
+    // Validar que se haya seleccionado el tipo de aparcería
+    if (!formValues.tipo_aparceria) {
+      alert('Por favor, selecciona un tipo de aparcería antes de continuar.');
+      return;
+    }
     onNext(formValues); // Envía los valores al componente principal y avanza a la siguiente sección
   };
 
@@ -71,8 +76,8 @@ const First = ({ onNext, initialValues }) => {
         <FormLabel component="legend">Tipo de Aparcería:</FormLabel>
         <RadioGroup
           row
-          name="tipoAparceria"
-          value={formValues.tipoAparceria}
+          name="tipo_aparceria"
+          value={formValues.tipo_aparceria}
           onChange={handleInputChange}
         >
           <Grid container spacing={2}>

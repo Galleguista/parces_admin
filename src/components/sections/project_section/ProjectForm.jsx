@@ -1,6 +1,5 @@
-// project_section/ProjectForm.js
+// ProjectForm.js
 import React, { useState } from 'react';
-import { Button } from '@mui/material';
 import First from './Form/First';
 import Secondary from './Form/Secondary';
 import Tertiary from './Form/Tertiary';
@@ -8,64 +7,47 @@ import Quaternary from './Form/Quaternary';
 import Quinary from './Form/Quinary';
 
 const ProjectForm = ({ onSubmit }) => {
-  const [step, setStep] = useState(0); // Controla la sección actual
+  const [step, setStep] = useState(0);
   const [formData, setFormData] = useState({
     nombre: '',
     descripcion: '',
     ubicacion: '',
-    tipoAparceria: '',
-    tamanoTerreno: '',
-    duracionProyecto: '',
-    numeroParticipantes: '',
-    aportesParticipantes: '',
-    recursosDisponibles: '',
-    modalidadParticipacion: '',
-    modeloReparto: '',
-    nombreEncargado: '',
-    correoContacto: '',
-    telefonoContacto: '',
-    aceptarTerminos: false,
-    publicarComunidad: false,
-    archivos: [],
-    iconoSeleccionado: '',
+    tipo_aparceria: '',          
+    tamano_terreno: '',
+    duracion_proyecto: '',
+    numero_participantes: '',
+    aportes_participantes: '',
+    recursos_disponibles: '',
+    modalidad_participacion: '',
+    modelo_reparto: '',
+    nombre_encargado: '',
+    correo_contacto: '',
+    telefono_contacto: '',
+    icono_seleccionado: '',
+    aceptar_terminos: false,
+    publicar_comunidad: false,
   });
 
   const handleNext = (data) => {
-    // Actualizar formData con los datos de la sección actual
     setFormData((prevData) => ({ ...prevData, ...data }));
-    setStep(step + 1); // Avanza a la siguiente sección
+    setStep(step + 1);
   };
 
   const handlePrevious = () => {
-    setStep(step - 1); // Retrocede a la sección anterior
+    setStep(step - 1);
   };
 
   const handleFinish = () => {
-    onSubmit(formData); // Envía todos los datos al backend
+    onSubmit(formData);
   };
 
   return (
     <div>
-      {step === 0 && (
-        <First onNext={handleNext} initialValues={formData} />
-      )}
-      {step === 1 && (
-        <Secondary onNext={handleNext} onPrevious={handlePrevious} initialValues={formData} />
-      )}
-      {step === 2 && (
-        <Tertiary onNext={handleNext} onPrevious={handlePrevious} initialValues={formData} />
-      )}
-      {step === 3 && (
-        <Quaternary onNext={handleNext} onPrevious={handlePrevious} initialValues={formData} />
-      )}
-      {step === 4 && (
-        <Quinary onNext={handleFinish} onPrevious={handlePrevious} initialValues={formData} />
-      )}
-      {step === 4 && (
-        <Button variant="contained" color="primary" onClick={handleFinish} style={{ marginTop: '16px' }}>
-          Finalizar
-        </Button>
-      )}
+      {step === 0 && <First onNext={handleNext} initialValues={formData} />}
+      {step === 1 && <Secondary onNext={handleNext} onPrevious={handlePrevious} initialValues={formData} />}
+      {step === 2 && <Tertiary onNext={handleNext} onPrevious={handlePrevious} initialValues={formData} />}
+      {step === 3 && <Quaternary onNext={handleNext} onPrevious={handlePrevious} initialValues={formData} />}
+      {step === 4 && <Quinary onNext={handleFinish} onPrevious={handlePrevious} initialValues={formData} />}
     </div>
   );
 };

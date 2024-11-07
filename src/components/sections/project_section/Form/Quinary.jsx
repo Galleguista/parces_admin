@@ -1,32 +1,47 @@
-// project_section/Form/Quinary.js
-import React, { useState } from 'react';
-import { Box, TextField, Typography, Button, FormControlLabel, Checkbox, Radio, RadioGroup, FormLabel, Grid } from '@mui/material';
-import { Agriculture, Pets, EmojiNature, Waves, Hive } from '@mui/icons-material';
+import React, { useState, useEffect } from 'react';
+import { Box, TextField, Typography, Button, FormControlLabel, Checkbox } from '@mui/material';
 
 const Quinary = ({ onNext, onPrevious, initialValues }) => {
   const [formValues, setFormValues] = useState({
-    nombreEncargado: '',
-    correoContacto: '',
-    telefonoContacto: '',
+    nombre_encargado: '',
+    correo_contacto: '',
+    telefono_contacto: '',
     aceptarTerminos: false,
     publicarComunidad: false,
     archivos: [],
-    iconoSeleccionado: '',
-    ...initialValues, // Cargar valores iniciales si existen
+    ...initialValues,
   });
+
+  useEffect(() => {
+    setFormValues((prevValues) => ({
+      ...prevValues,
+      ...initialValues,
+    }));
+    console.log("Valores iniciales cargados en Quinary:", initialValues); // Depuración
+  }, [initialValues]);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormValues({ ...formValues, [name]: type === 'checkbox' ? checked : value });
+    setFormValues((prevValues) => ({ ...prevValues, [name]: type === 'checkbox' ? checked : value }));
+    console.log("Campo actualizado en Quinary:", name, value); // Depuración
   };
 
   const handleFileChange = (e) => {
-    const files = Array.from(e.target.files).slice(0, 10); // Limitar a 10 archivos
-    setFormValues({ ...formValues, archivos: files });
+    const files = Array.from(e.target.files).slice(0, 10);
+    setFormValues((prevValues) => ({ ...prevValues, archivos: files }));
   };
 
   const handleNext = () => {
-    onNext(formValues); // Envía los valores al componente principal y avanza a la siguiente sección
+    console.log("Datos a enviar desde Quinary:", formValues); // Depuración antes de enviar
+    const requiredFields = ['nombre_encargado', 'correo_contacto'];
+    const hasAllRequiredFields = requiredFields.every((field) => formValues[field]);
+
+    if (hasAllRequiredFields) {
+      onNext(formValues);
+    } else {
+      console.log("Campos obligatorios faltantes en Quinary:", formValues); // Depuración de campos faltantes
+      alert("Por favor, completa todos los campos obligatorios.");
+    }
   };
 
   return (
@@ -36,10 +51,10 @@ const Quinary = ({ onNext, onPrevious, initialValues }) => {
       <Typography variant="subtitle1" gutterBottom>Nombre del Encargado:</Typography>
       <TextField
         fullWidth
-        name="nombreEncargado"
+        name="nombre_encargado"
         variant="outlined"
         placeholder="Nombre completo del responsable o líder del proyecto."
-        value={formValues.nombreEncargado}
+        value={formValues.nombre_encargado}
         onChange={handleInputChange}
         sx={{ marginBottom: 2 }}
       />
@@ -47,10 +62,10 @@ const Quinary = ({ onNext, onPrevious, initialValues }) => {
       <Typography variant="subtitle1" gutterBottom>Correo Electrónico de Contacto:</Typography>
       <TextField
         fullWidth
-        name="correoContacto"
+        name="correo_contacto"
         variant="outlined"
         placeholder="Correo electrónico para que los interesados puedan comunicarse."
-        value={formValues.correoContacto}
+        value={formValues.correo_contacto}
         onChange={handleInputChange}
         sx={{ marginBottom: 2 }}
       />
@@ -58,108 +73,23 @@ const Quinary = ({ onNext, onPrevious, initialValues }) => {
       <Typography variant="subtitle1" gutterBottom>Teléfono de Contacto (opcional):</Typography>
       <TextField
         fullWidth
-        name="telefonoContacto"
+        name="telefono_contacto"
         variant="outlined"
         placeholder="Número de contacto para consultas rápidas."
-        value={formValues.telefonoContacto}
+        value={formValues.telefono_contacto}
         onChange={handleInputChange}
         sx={{ marginBottom: 2 }}
       />
 
       <Typography variant="subtitle1" gutterBottom>Publicar Proyecto:</Typography>
       <FormControlLabel
-        control={
-          <Checkbox
-            checked={formValues.aceptarTerminos}
-            onChange={handleInputChange}
-            name="aceptarTerminos"
-          />
-        }
+        control={<Checkbox checked={formValues.aceptarTerminos} onChange={handleInputChange} name="aceptarTerminos" />}
         label="Acepto los términos y condiciones de Parces"
       />
       <FormControlLabel
-        control={
-          <Checkbox
-            checked={formValues.publicarComunidad}
-            onChange={handleInputChange}
-            name="publicarComunidad"
-          />
-        }
+        control={<Checkbox checked={formValues.publicarComunidad} onChange={handleInputChange} name="publicarComunidad" />}
         label="Publicar mi proyecto a la comunidad"
       />
-
-      <Typography variant="subtitle1" gutterBottom sx={{ marginTop: 3 }}>
-        Selecciona un Ícono Representativo:
-      </Typography>
-      <RadioGroup
-        row
-        name="iconoSeleccionado"
-        value={formValues.iconoSeleccionado}
-        onChange={handleInputChange}
-      >
-        <Grid container spacing={2}>
-          <Grid item xs={6} sm={4}>
-            <FormControlLabel
-              value="Agriculture"
-              control={<Radio />}
-              label={
-                <Box display="flex" alignItems="center">
-                  <Agriculture fontSize="small" sx={{ mr: 1 }} />
-                  Agrícola
-                </Box>
-              }
-            />
-          </Grid>
-          <Grid item xs={6} sm={4}>
-            <FormControlLabel
-              value="Pets"
-              control={<Radio />}
-              label={
-                <Box display="flex" alignItems="center">
-                  <Pets fontSize="small" sx={{ mr: 1 }} />
-                  Ganadera
-                </Box>
-              }
-            />
-          </Grid>
-          <Grid item xs={6} sm={4}>
-            <FormControlLabel
-              value="EmojiNature"
-              control={<Radio />}
-              label={
-                <Box display="flex" alignItems="center">
-                  <EmojiNature fontSize="small" sx={{ mr: 1 }} />
-                  Avícola
-                </Box>
-              }
-            />
-          </Grid>
-          <Grid item xs={6} sm={4}>
-            <FormControlLabel
-              value="Waves"
-              control={<Radio />}
-              label={
-                <Box display="flex" alignItems="center">
-                  <Waves fontSize="small" sx={{ mr: 1 }} />
-                  Piscícola
-                </Box>
-              }
-            />
-          </Grid>
-          <Grid item xs={6} sm={4}>
-            <FormControlLabel
-              value="Hive"
-              control={<Radio />}
-              label={
-                <Box display="flex" alignItems="center">
-                  <Hive fontSize="small" sx={{ mr: 1 }} />
-                  Apícola
-                </Box>
-              }
-            />
-          </Grid>
-        </Grid>
-      </RadioGroup>
 
       <Typography variant="subtitle1" gutterBottom sx={{ marginTop: 3 }}>
         Subir Imágenes y Archivos relacionados:
