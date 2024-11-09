@@ -163,10 +163,10 @@ const GroupsSection = () => {
 
   const handleSendMessage = async () => {
     if (newMessage.trim() === '') return;
-
+  
     try {
       const targetChatId = privateChatId || chatId; // Usar privateChatId si existe, sino usar chatId del grupo
-
+  
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL}/mensajes`,
         {
@@ -187,23 +187,26 @@ const GroupsSection = () => {
   };
 
   const handleStartPrivateChat = async (memberId) => {
-    try {
-      console.log("Iniciando chat privado con memberId:", memberId);
-      const response = await instance.post('/conversaciones/private-chat', { memberId }, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
+  try {
+    console.log("Iniciando chat privado con memberId:", memberId);
+    const response = await instance.post('/conversaciones/private-chat', { memberId }, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
+    });
 
-      console.log("Respuesta del servidor para la conversación privada:", response.data);
-      setPrivateChatId(response.data.conversacion_id); // Guardar el ID de la conversación privada
-      setChatId(response.data.conversacion_id); // Actualizar chatId a la conversación privada
-      setIsChatOpen(true);
-      fetchMessages(response.data.conversacion_id); // Cargar mensajes de la conversación privada
-    } catch (error) {
-      console.error('Error al iniciar chat privado:', error);
-    }
-  };
+    console.log("Respuesta del servidor para la conversación privada:", response.data);
+    setPrivateChatId(response.data.conversacion_id); // Guardar el ID de la conversación privada
+    setChatId(response.data.conversacion_id); // Actualizar chatId a la conversación privada
+    setIsChatOpen(true);
+    setSelectedGroup(null); // Cerrar ventana de visualización de grupo
+    setTabValue(0); // Resetear la pestaña al valor inicial
+    fetchMessages(response.data.conversacion_id); // Cargar mensajes de la conversación privada
+  } catch (error) {
+    console.error('Error al iniciar chat privado:', error);
+  }
+};
+
   
   return (
     <>

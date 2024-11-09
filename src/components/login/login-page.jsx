@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { Container, Box, Card, CardContent, TextField, Button, Typography, Avatar, CssBaseline, Link } from '@mui/material';
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import { Container, Box, Card, CardContent, TextField, Button, Typography, CssBaseline, Link } from '@mui/material';
 import { ThemeProvider } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -15,19 +14,24 @@ const LoginPage = ({ onLogin, onShowRegister }) => {
     e.preventDefault();
     console.log('Intento de inicio de sesión con:', { correoElectronico, password });
     try {
+      // Realiza la consulta de autenticación del usuario
       const response = await axios.post(`${import.meta.env.VITE_API_URL}/auth/login`, {
         correo_electronico: correoElectronico,
         password: password,
       });
-      console.log('Respuesta del backend:', response);
+      
       const { access_token } = response.data;
       console.log('Token de acceso recibido:', access_token);
+
+      // Guarda el token en localStorage
       localStorage.setItem('token', access_token);
+
+      // Llama a onLogin y navega a la ruta de administrador
       onLogin();
       navigate('/admin');
     } catch (error) {
       console.error('Error durante el inicio de sesión:', error);
-      alert('Credenciales inválidas');
+      alert('Credenciales inválidas o error en la autenticación');
     }
   };
 
@@ -52,7 +56,7 @@ const LoginPage = ({ onLogin, onShowRegister }) => {
                   alignItems: 'center',
                 }}
               >
-                <img src="/logo.png" alt="Logo" style={{ width: 100, marginBottom: 16 }} /> {/* Logo desde la carpeta public */}
+                <img src="/logo.png" alt="Logo" style={{ width: 100, marginBottom: 16 }} />
                 <Typography component="h1" variant="h5">
                   Inicio de Sesión
                 </Typography>

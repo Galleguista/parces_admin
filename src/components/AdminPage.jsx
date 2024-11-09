@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, CssBaseline, IconButton } from '@mui/material';
+import { Box, CssBaseline, IconButton, Typography } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -17,6 +17,7 @@ import Feed from './sections/Feed';
 
 const drawerWidth = 280;
 const API_URL = `${import.meta.env.VITE_API_URL}/usuarios/me`;
+const ROLE_URL = `${import.meta.env.VITE_API_URL}/roles`; // URL base para roles
 
 const sections = [
   { id: 'profile', label: 'Perfil' },
@@ -32,12 +33,24 @@ const sections = [
 const AdminPage = () => {
   const [activeSection, setActiveSection] = useState('profile');
   const [chatSidebarOpen, setChatSidebarOpen] = useState(false);
-  const [userProfile, setUserProfile] = useState({ nombre: '', avatarUrl: '' });
+  const [userProfile, setUserProfile] = useState({ nombre: '', avatarUrl: '', roleName: '' });
   const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     const token = localStorage.getItem('token');
+
+    // Decodificamos el JWT para obtener el `role_id`
+    const decodeToken = (token) => {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return payload.role_id;
+      } catch (error) {
+        console.error('Error decoding token:', error);
+        return null;
+      }
+    };
+
     const fetchUserProfile = async () => {
       try {
         const response = await axios.get(API_URL, {
@@ -46,11 +59,10 @@ const AdminPage = () => {
           },
         });
 
-        // Construimos la URL completa para el avatar, similar a como lo haces en el componente de perfil
         const publicUrl = import.meta.env.VITE_PUBLIC_URL;
         const profileData = {
           ...response.data,
-          avatarUrl: response.data.avatar ? `${publicUrl}${response.data.avatar}` : '', // Construir la URL completa de la imagen
+          avatarUrl: response.data.avatar ? `${publicUrl}${response.data.avatar}` : '',
         };
         setUserProfile(profileData);
       } catch (error) {
@@ -58,7 +70,28 @@ const AdminPage = () => {
       }
     };
 
-    fetchUserProfile();
+    const fetchRoleDetails = async (roleId) => {
+      try {
+        const response = await axios.get(`${ROLE_URL}/${roleId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        setUserProfile((prevProfile) => ({
+          ...prevProfile,
+          roleName: response.data.role_name,
+        }));
+      } catch (error) {
+        console.error('Error fetching role details:', error);
+      }
+    };
+
+    if (token) {
+      const roleId = decodeToken(token);
+      if (roleId) {
+        fetchUserProfile();
+        fetchRoleDetails(roleId); // Consulta directa al endpoint `/roles/:id`
+      }
+    }
   }, []);
 
   const handleSectionChange = (sectionId) => {
@@ -90,7 +123,7 @@ const AdminPage = () => {
       <Sidebar
         activeSection={activeSection}
         handleSectionChange={handleSectionChange}
-        userProfile={userProfile} // Pasamos el perfil actualizado con la URL del avatar
+        userProfile={userProfile}
         mobileOpen={mobileOpen}
         handleDrawerToggle={handleDrawerToggle}
       />
@@ -109,6 +142,7 @@ const AdminPage = () => {
         >
           <MenuIcon />
         </IconButton>
+        
         {activeSection === 'profile' && <ProfileSection />}
         {activeSection === 'projects' && <ProjectsSection />}
         {activeSection === 'groups' && <GroupsSection />}

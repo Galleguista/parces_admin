@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { 
-  Container, TextField, Box, Fab, Dialog, DialogContent, DialogTitle, Grid, Card, CardContent, Typography, 
-  CardActions, IconButton, Select, MenuItem, InputLabel, FormControl, Chip, Tooltip, Avatar, Stack 
+import {
+  Container, TextField, Box, Fab, Dialog, DialogContent, DialogTitle, Grid, Card, CardContent, Typography,
+  CardActions, IconButton, Select, MenuItem, InputLabel, FormControl, Chip, Tooltip, Avatar, Stack
 } from '@mui/material';
 
 import AddIcon from '@mui/icons-material/Add';
@@ -33,11 +33,22 @@ const ProjectsSection = () => {
 
   const instance = axios.create({
     baseURL: import.meta.env.VITE_API_URL || 'http://localhost:4000',
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem('token')}`,
+      'Content-Type': 'application/json',
+    },
   });
+  
 
   useEffect(() => {
-    fetchProjects();
+    const token = localStorage.getItem('token');
+    if (token) {
+      fetchProjects();
+    } else {
+      console.error('No se encontró el token');
+    }
   }, []);
+  
 
   const fetchProjects = async () => {
     try {
@@ -52,35 +63,39 @@ const ProjectsSection = () => {
     }
   };
 
-  const handleCreateProject = async (newProject) => {
+  const handleCreateOrUpdateProject = async (projectData) => {
     try {
-      const response = await instance.post('/proyectos/create', newProject, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      setProjects([...projects, response.data]);
-      setOpen(false);  // Cierra el modal después de crear el proyecto
+      if (selectedProject) {
+        const response = await instance.patch(`/proyectos/${selectedProject.proyecto_id}`, projectData);
+        setProjects((prevProjects) =>
+          prevProjects.map((proj) =>
+            proj.proyecto_id === selectedProject.proyecto_id ? response.data : proj
+          )
+        );
+      } else {
+        const response = await instance.post('/proyectos/create', projectData);
+        setProjects([...projects, response.data]);
+      }
+      handleClose();
     } catch (error) {
-      console.error('Error creating project:', error);
+      console.error('Error creating or updating project:', error);
     }
   };
+  
 
   const handleClickOpen = () => {
+    setSelectedProject(null); // Resetea el proyecto seleccionado para nueva creación
+    setOpen(true);
+  };
+
+  const handleEditProject = (project) => {
+    setSelectedProject(project); // Establece el proyecto para editar
     setOpen(true);
   };
 
   const handleClose = () => {
     setOpen(false);
-  };
-
-  const handleProjectClick = (project) => {
-    setSelectedProject(project);
-  };
-
-  const handleDetailsClose = () => {
-    setSelectedProject(null);
+    setSelectedProject(null); // Limpia el proyecto seleccionado al cerrar
   };
 
   return (
@@ -138,7 +153,7 @@ const ProjectsSection = () => {
         {projects.filter((project) => project.nombre.toLowerCase().includes(searchTerm.toLowerCase()))
           .map((project) => (
             <Grid item xs={12} sm={6} md={4} lg={3} key={project.proyecto_id}>
-              <Card onClick={() => handleProjectClick(project)} sx={{
+              <Card onClick={() => handleEditProject(project)} sx={{
                 borderRadius: '16px', transition: 'transform 0.3s, box-shadow 0.3s',
                 '&:hover': { transform: 'scale(1.05)', boxShadow: '0 6px 20px rgba(0, 0, 0, 0.15)' },
                 display: 'flex', flexDirection: 'column', alignItems: 'center', height: 250, padding: 2,
@@ -179,14 +194,14 @@ const ProjectsSection = () => {
         <AddIcon />
       </Fab>
       <Dialog open={open} onClose={handleClose} PaperProps={{ sx: { borderRadius: '24px', width: '80%' } }}>
-        <DialogTitle>Crear Nuevo Proyecto</DialogTitle>
+        <DialogTitle>{selectedProject ? 'Actualizar Proyecto' : 'Crear Nuevo Proyecto'}</DialogTitle>
         <DialogContent>
-          <ProjectForm onSubmit={handleCreateProject} />
+          <ProjectForm onSubmit={handleCreateOrUpdateProject} initialValues={selectedProject || {}} />
         </DialogContent>
       </Dialog>
 
       {selectedProject && (
-        <ProjectDetails project={selectedProject} onClose={handleDetailsClose} />
+        <ProjectDetails project={selectedProject} onClose={handleClose} onUpdateProject={handleCreateOrUpdateProject} />
       )}
     </Container>
   );

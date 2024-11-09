@@ -1,5 +1,5 @@
 import React from 'react';
-import { Drawer, List, ListItem, ListItemIcon, ListItemText, Box, Avatar, Typography, Divider, Stack } from '@mui/material';
+import { Drawer, List, ListItem, ListItemIcon, ListItemText, Box, Avatar, Typography, Divider } from '@mui/material';
 import { useTheme, alpha } from '@mui/material/styles';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import ExploreIcon from '@mui/icons-material/Explore';
@@ -36,7 +36,7 @@ const Sidebar = ({ activeSection, handleSectionChange, userProfile, mobileOpen, 
           sx={{ width: 100, height: 100, mb: 1 }}
         />
         <Typography variant="h6">{userProfile.nombre}</Typography>
-        <Typography variant="body2" color="textSecondary">Usuario</Typography>
+        <Typography variant="body2" color="textSecondary">{userProfile.roleName || 'Rol no asignado'}</Typography> {/* Mostramos el rol aquí */}
       </Box>
       <Divider />
       <List>
