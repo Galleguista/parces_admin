@@ -6,27 +6,21 @@ import axios from 'axios';
 import theme from '../../theme';
 
 const LoginPage = ({ onLogin, onShowRegister }) => {
-  const [correoElectronico, setCorreoElectronico] = useState('');
-  const [password, setPassword] = useState('');
+  const [usuario, setUsuario] = useState(''); // Estado para usuario
+  const [password, setPassword] = useState(''); // Estado para contraseña
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    console.log('Intento de inicio de sesión con:', { correoElectronico, password });
+    console.log({ usuario, password }); // Asegúrate de que ambos valores estén definidos
+  
     try {
-      // Realiza la consulta de autenticación del usuario
       const response = await axios.post(`${import.meta.env.VITE_API_URL}/auth/login`, {
-        correo_electronico: correoElectronico,
-        password: password,
+        usuario,
+        password,
       });
-      
       const { access_token } = response.data;
-      console.log('Token de acceso recibido:', access_token);
-
-      // Guarda el token en localStorage
       localStorage.setItem('token', access_token);
-
-      // Llama a onLogin y navega a la ruta de administrador
       onLogin();
       navigate('/admin');
     } catch (error) {
@@ -34,6 +28,7 @@ const LoginPage = ({ onLogin, onShowRegister }) => {
       alert('Credenciales inválidas o error en la autenticación');
     }
   };
+  
 
   return (
     <ThemeProvider theme={theme}>
@@ -65,13 +60,13 @@ const LoginPage = ({ onLogin, onShowRegister }) => {
                     margin="normal"
                     required
                     fullWidth
-                    id="correoElectronico"
-                    label="Correo Electrónico"
-                    name="correoElectronico"
-                    autoComplete="email"
+                    id="usuario"
+                    label="Nombre de Usuario"
+                    name="usuario"
+                    autoComplete="usuario"
                     autoFocus
-                    value={correoElectronico}
-                    onChange={(e) => setCorreoElectronico(e.target.value)}
+                    value={usuario}
+                    onChange={(e) => setUsuario(e.target.value)} // Actualizar el estado del usuario
                   />
                   <TextField
                     margin="normal"
@@ -83,7 +78,7 @@ const LoginPage = ({ onLogin, onShowRegister }) => {
                     id="password"
                     autoComplete="current-password"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => setPassword(e.target.value)} // Actualizar el estado de la contraseña
                   />
                   <Button
                     type="submit"

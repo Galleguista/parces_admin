@@ -1,30 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Dialog, DialogContent, DialogTitle, Typography, Box, Grid, List, ListItem, ListItemAvatar, ListItemText,
-  Avatar, Button, TextField, Alert, Tabs, Tab
+  Dialog, DialogContent, DialogTitle, Typography, Box, Avatar, Button, Alert, Tabs, Tab, List, ListItem, ListItemAvatar, ListItemText, TextField,
 } from '@mui/material';
-import { People, Info } from '@mui/icons-material';
+import { Info, People } from '@mui/icons-material';
 import axios from 'axios';
 
-// Configuración de Axios
 const instance = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000',
 });
 
 const ProjectDetails = ({ project, onClose, onUpdateProject }) => {
-  const [tabValue, setTabValue] = useState(0); // Controla la pestaña activa
-  const [miembros, setMiembros] = useState([]); // Miembros del proyecto
-  const [isAddingMember, setIsAddingMember] = useState(false); // Controla el modal de añadir miembros
-  const [newMemberId, setNewMemberId] = useState(''); // Almacena el ID del nuevo miembro
-  const [addMemberError, setAddMemberError] = useState(null); // Controla errores al añadir miembros
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedProject, setEditedProject] = useState({ ...project });
+  const [errorAlert, setErrorAlert] = useState(false);
+  const [tabValue, setTabValue] = useState(0);
+  const [admin, setAdmin] = useState(null);
+  const [miembros, setMiembros] = useState([]);
+  const [isAddingMember, setIsAddingMember] = useState(false);
+  const [newMemberId, setNewMemberId] = useState('');
+  const [addMemberError, setAddMemberError] = useState(null);
 
-  // Punto de depuración: Logs iniciales
+  // Actualiza los datos al abrir el modal
   useEffect(() => {
-    console.log("Valor de project.usuario_id:", project.usuario_id);
-    console.log("Valor de localStorage user_id:", localStorage.getItem('user_id'));
+    setEditedProject({ ...project });
   }, [project]);
 
-  // Fetch miembros del proyecto desde el backend
+  // Fetch de miembros y administrador del proyecto
   const fetchMiembros = async () => {
     try {
       const response = await instance.get(`/proyectos/${project.proyecto_id}/miembros`, {
@@ -32,25 +33,40 @@ const ProjectDetails = ({ project, onClose, onUpdateProject }) => {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
       });
-      setMiembros(response.data);
+      setAdmin(response.data.administrador);
+
+      // Filtrar para evitar duplicados del administrador
+      const filteredMiembros = response.data.miembros.filter(
+        (member) => member.usuario_id !== response.data.administrador.usuario_id
+      );
+      setMiembros(filteredMiembros);
     } catch (error) {
       console.error('Error al obtener los miembros del proyecto:', error);
     }
   };
 
-  // Cargar miembros al abrir la pestaña de "Miembros"
   useEffect(() => {
-    if (tabValue === 1 && project?.proyecto_id) {
+    if (project?.proyecto_id) {
       fetchMiembros();
     }
-  }, [tabValue, project]);
+  }, [project]);
 
-  // Cambiar entre pestañas
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
   };
 
-  // Añadir un miembro al proyecto
+  const handleSaveChanges = async () => {
+    try {
+      await onUpdateProject(editedProject);
+      setIsEditing(false);
+      setErrorAlert(false);
+    } catch (error) {
+      setErrorAlert(true);
+      console.error("Error al actualizar el proyecto:", error);
+    }
+  };
+
+  // Lógica para añadir un miembro
   const handleAddMember = async () => {
     if (!newMemberId.trim()) {
       setAddMemberError('Por favor, ingresa un ID o correo válido.');
@@ -66,9 +82,9 @@ const ProjectDetails = ({ project, onClose, onUpdateProject }) => {
           },
         }
       );
-      fetchMiembros(); // Refresca los miembros
+      fetchMiembros();
       setIsAddingMember(false);
-      setNewMemberId(''); // Limpia el campo de texto
+      setNewMemberId('');
       setAddMemberError(null);
     } catch (error) {
       if (error.response?.status === 403) {
@@ -84,20 +100,22 @@ const ProjectDetails = ({ project, onClose, onUpdateProject }) => {
 
   return (
     <Dialog open={Boolean(project)} onClose={onClose} maxWidth="md" fullWidth>
-      {/* Título del diálogo */}
+      {errorAlert && (
+        <Alert severity="error" onClose={() => setErrorAlert(false)} sx={{ mb: 2 }}>
+          No tienes permiso para realizar esta acción.
+        </Alert>
+      )}
+
       <DialogTitle>
         {project.nombre}
       </DialogTitle>
-
-      {/* Contenido del diálogo */}
       <DialogContent>
-        {/* Pestañas */}
         <Tabs value={tabValue} onChange={handleTabChange} variant="fullWidth">
           <Tab label="Información" icon={<Info />} />
           <Tab label="Miembros" icon={<People />} />
         </Tabs>
 
-        {/* Pestaña de Información */}
+        {/* Información del Proyecto */}
         {tabValue === 0 && (
           <Box sx={{ p: 2 }}>
             <Typography variant="h6">Descripción:</Typography>
@@ -105,20 +123,13 @@ const ProjectDetails = ({ project, onClose, onUpdateProject }) => {
           </Box>
         )}
 
-        {/* Pestaña de Miembros */}
+        {/* Miembros del Proyecto */}
         {tabValue === 1 && (
           <Box sx={{ p: 2 }}>
             <Typography variant="h6">Miembros del Proyecto</Typography>
 
-            {/* Depuración del botón "Añadir Miembro" */}
-            {project.usuario_id !== localStorage.getItem('user_id') && (
-              <Typography variant="body2" color="error" sx={{ mb: 2 }}>
-                ⚠️ El usuario autenticado no es administrador. No se mostrará el botón de añadir miembro.
-              </Typography>
-            )}
-
-            {/* Botón para añadir miembros (visible solo para el administrador) */}
-            {project.usuario_id === localStorage.getItem('user_id') && (
+            {/* Botón para añadir miembros (solo para el administrador) */}
+            {admin?.usuario_id === localStorage.getItem('user_id') && (
               <Button
                 variant="contained"
                 color="primary"
@@ -129,23 +140,28 @@ const ProjectDetails = ({ project, onClose, onUpdateProject }) => {
               </Button>
             )}
 
-            {/* Lista de miembros */}
             <List>
-              {miembros.length > 0 ? (
-                miembros.map((member) => (
-                  <ListItem key={member.id}>
-                    <ListItemAvatar>
-                      <Avatar src={`data:image/jpeg;base64,${member.avatar}`} alt={member.nombre} />
-                    </ListItemAvatar>
-                    <ListItemText primary={member.nombre} secondary={member.email} />
-                  </ListItem>
-                ))
-              ) : (
-                <Typography variant="body2">No hay miembros registrados en este proyecto.</Typography>
+              {/* Mostrar Administrador */}
+              {admin && (
+                <ListItem>
+                  <ListItemAvatar>
+                    <Avatar src={`data:image/jpeg;base64,${admin.avatar}`} alt={admin.nombre} />
+                  </ListItemAvatar>
+                  <ListItemText primary={`${admin.nombre} (Administrador)`} />
+                </ListItem>
               )}
+              {/* Mostrar Miembros sin incluir al Administrador */}
+              {miembros.map((member) => (
+                <ListItem key={member.usuario_id}>
+                  <ListItemAvatar>
+                    <Avatar src={`data:image/jpeg;base64,${member.avatar}`} alt={member.nombre} />
+                  </ListItemAvatar>
+                  <ListItemText primary={member.nombre} />
+                </ListItem>
+              ))}
             </List>
 
-            {/* Modal para añadir miembros */}
+            {/* Modal para añadir miembro */}
             <Dialog open={isAddingMember} onClose={() => setIsAddingMember(false)}>
               <DialogTitle>Añadir Miembro</DialogTitle>
               <DialogContent>
