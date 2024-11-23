@@ -1,34 +1,32 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // Importa useNavigate
 import { Container, Box, Card, CardContent, TextField, Button, Typography, CssBaseline } from '@mui/material';
 import { ThemeProvider } from '@mui/material/styles';
-import RegisterPage from './register-page';
+import RegisterPage from './register-page'; // Importa el formulario de registro
+import axios from 'axios';
 import theme from '../../theme';
 
-const LoginPage = ({ onLogin, onShowRegister }) => {
-  const [usuario, setUsuario] = useState(''); // Estado para usuario
-  const [password, setPassword] = useState(''); // Estado para contraseña
-  const [showRegister, setShowRegister] = useState(false); // Estado para mostrar la vista de registro
+const LoginPage = ({ onLogin }) => {
+  const [usuario, setUsuario] = useState('');
+  const [password, setPassword] = useState('');
+  const [showRegister, setShowRegister] = useState(false); // Estado para alternar entre login y registro
+  const navigate = useNavigate(); // Inicializa useNavigate
 
   const handleLogin = async (e) => {
     e.preventDefault();
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ usuario, password }),
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/auth/login`, {
+        usuario,
+        password,
       });
-      if (response.ok) {
-        const data = await response.json();
-        localStorage.setItem('token', data.access_token);
-        onLogin();
-      } else {
-        alert('Credenciales inválidas o error en la autenticación');
-      }
+      const { access_token } = response.data;
+      localStorage.setItem('token', access_token);
+      onLogin();
+      navigate('/admin'); // Navegar manualmente a /admin después de loguearse
     } catch (error) {
-      console.error('Error durante el inicio de sesión:', error);
+      console.error('Error durante el inicio de sesión:', error.response || error);
+      alert('Credenciales inválidas o error en la autenticación');
     }
   };
 
@@ -50,6 +48,8 @@ const LoginPage = ({ onLogin, onShowRegister }) => {
         ) : (
           // Mostrar el componente de inicio de sesión
           <Box
+            component="form"
+            onSubmit={handleLogin}
             sx={{
               marginTop: 8,
               display: 'flex',
@@ -70,52 +70,50 @@ const LoginPage = ({ onLogin, onShowRegister }) => {
                   <Typography component="h1" variant="h5">
                     Inicio de Sesión
                   </Typography>
-                  <Box component="form" onSubmit={handleLogin} sx={{ mt: 1, width: '100%' }}>
-                    <TextField
-                      margin="normal"
-                      required
-                      fullWidth
-                      id="usuario"
-                      label="Nombre de Usuario"
-                      name="usuario"
-                      autoComplete="usuario"
-                      autoFocus
-                      value={usuario}
-                      onChange={(e) => setUsuario(e.target.value)}
-                    />
-                    <TextField
-                      margin="normal"
-                      required
-                      fullWidth
-                      name="password"
-                      label="Contraseña"
-                      type="password"
-                      id="password"
-                      autoComplete="current-password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                    />
-                    <Button
-                      type="submit"
-                      fullWidth
-                      variant="contained"
-                      sx={{ mt: 3, mb: 2 }}
-                    >
-                      Iniciar Sesión
-                    </Button>
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        textAlign: 'center',
-                        cursor: 'pointer',
-                        color: 'primary.main',
-                        mt: 2,
-                      }}
-                      onClick={handleSwitchToRegister}
-                    >
-                      ¿No tienes una cuenta? Crea una
-                    </Typography>
-                  </Box>
+                  <TextField
+                    margin="normal"
+                    required
+                    fullWidth
+                    id="usuario"
+                    label="Nombre de Usuario"
+                    name="usuario"
+                    autoComplete="usuario"
+                    autoFocus
+                    value={usuario}
+                    onChange={(e) => setUsuario(e.target.value)}
+                  />
+                  <TextField
+                    margin="normal"
+                    required
+                    fullWidth
+                    name="password"
+                    label="Contraseña"
+                    type="password"
+                    id="password"
+                    autoComplete="current-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                  <Button
+                    type="submit"
+                    fullWidth
+                    variant="contained"
+                    sx={{ mt: 3, mb: 2 }}
+                  >
+                    Iniciar Sesión
+                  </Button>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      textAlign: 'center',
+                      cursor: 'pointer',
+                      color: 'primary.main',
+                      mt: 2,
+                    }}
+                    onClick={handleSwitchToRegister} // Llama a la función para mostrar el registro
+                  >
+                    ¿No tienes una cuenta? Crea una
+                  </Typography>
                 </Box>
               </CardContent>
             </Card>
