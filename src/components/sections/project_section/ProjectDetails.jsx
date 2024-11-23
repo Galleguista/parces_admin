@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Dialog, DialogContent, DialogTitle, Typography, Box, Avatar, Button, Alert, Tabs, Tab, List, ListItem, ListItemAvatar, ListItemText, TextField,
+  Dialog, DialogContent, DialogTitle, Typography, Box, Avatar, Button, Alert, Tabs, Tab, List, ListItem, ListItemAvatar, ListItemText, TextField, Grid, Paper, FormControlLabel, Checkbox, Divider
 } from '@mui/material';
-import { Info, People } from '@mui/icons-material';
+import { ContactMail, Info, Nature, People, LocationOn, AttachFile, Edit, Chat } from '@mui/icons-material';
 import axios from 'axios';
 
 const instance = axios.create({
@@ -19,8 +19,8 @@ const ProjectDetails = ({ project, onClose, onUpdateProject }) => {
   const [isAddingMember, setIsAddingMember] = useState(false);
   const [newMemberId, setNewMemberId] = useState('');
   const [addMemberError, setAddMemberError] = useState(null);
+  const currentUserId = localStorage.getItem('user_id'); // Obtener el ID del usuario actual
 
-  // Actualiza los datos al abrir el modal
   useEffect(() => {
     setEditedProject({ ...project });
   }, [project]);
@@ -33,6 +33,9 @@ const ProjectDetails = ({ project, onClose, onUpdateProject }) => {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
       });
+      console.log('Administrador del Proyecto:', response.data.administrador); // Depuración
+      console.log('Usuario Actual:', currentUserId); // Depuración
+
       setAdmin(response.data.administrador);
 
       // Filtrar para evitar duplicados del administrador
@@ -115,12 +118,102 @@ const ProjectDetails = ({ project, onClose, onUpdateProject }) => {
           <Tab label="Miembros" icon={<People />} />
         </Tabs>
 
-        {/* Información del Proyecto */}
         {tabValue === 0 && (
-          <Box sx={{ p: 2 }}>
-            <Typography variant="h6">Descripción:</Typography>
-            <Typography>{project.descripcion}</Typography>
-          </Box>
+          <Grid container spacing={2}>
+            {/* Información Básica */}
+            <Grid item xs={12}>
+              <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <Info sx={{ mr: 1, color: 'primary.main' }} />
+                Información Básica
+              </Typography>
+              <Paper elevation={2} sx={{ padding: 2 }}>
+                <Typography variant="body1"><strong>Nombre:</strong> {isEditing ? <TextField name="nombre" value={editedProject.nombre} onChange={handleInputChange} fullWidth /> : project.nombre}</Typography>
+                <Typography variant="body1"><strong>Descripción:</strong> {isEditing ? <TextField name="descripcion" value={editedProject.descripcion} onChange={handleInputChange} fullWidth multiline rows={2} /> : project.descripcion}</Typography>
+                <Typography variant="body1"><strong>Objetivos:</strong> {isEditing ? <TextField name="objetivos" value={editedProject.objetivos} onChange={handleInputChange} fullWidth multiline rows={2} /> : project.objetivos}</Typography>
+              </Paper>
+            </Grid>
+
+            {/* Detalles del Proyecto */}
+            <Grid item xs={12} md={6}>
+              <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <Nature sx={{ mr: 1, color: 'success.main' }} />
+                Detalles del Proyecto
+              </Typography>
+              <Paper elevation={2} sx={{ padding: 2 }}>
+                <Typography variant="body1"><strong>Tamaño del Terreno:</strong> {isEditing ? <TextField name="tamano_terreno" value={editedProject.tamano_terreno} onChange={handleInputChange} fullWidth /> : project.tamano_terreno}</Typography>
+                <Typography variant="body1"><strong>Duración:</strong> {isEditing ? <TextField name="duracion_proyecto" value={editedProject.duracion_proyecto} onChange={handleInputChange} fullWidth /> : project.duracion_proyecto}</Typography>
+                <Typography variant="body1"><strong>Participantes Esperados:</strong> {isEditing ? <TextField name="numero_participantes" value={editedProject.numero_participantes} onChange={handleInputChange} fullWidth /> : project.numero_participantes}</Typography>
+              </Paper>
+            </Grid>
+
+            {/* Participación y Recursos */}
+            <Grid item xs={12} md={6}>
+              <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <People sx={{ mr: 1, color: 'secondary.main' }} />
+                Participación y Recursos
+              </Typography>
+              <Paper elevation={2} sx={{ padding: 2 }}>
+                <Typography variant="body1"><strong>Aportes Esperados:</strong> {isEditing ? <TextField name="aportes_participantes" value={editedProject.aportes_participantes} onChange={handleInputChange} fullWidth /> : project.aportes_participantes}</Typography>
+                <Typography variant="body1"><strong>Recursos Disponibles:</strong> {isEditing ? <TextField name="recursos_disponibles" value={editedProject.recursos_disponibles} onChange={handleInputChange} fullWidth multiline rows={2} /> : project.recursos_disponibles}</Typography>
+              </Paper>
+            </Grid>
+
+            {/* Modalidad de Aparcería */}
+            <Grid item xs={12}>
+              <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <LocationOn sx={{ mr: 1, color: 'primary.main' }} />
+                Modalidad de Aparcería
+              </Typography>
+              <Paper elevation={2} sx={{ padding: 2 }}>
+                <Typography variant="body1"><strong>Modalidad:</strong> {isEditing ? <TextField name="modalidad_participacion" value={editedProject.modalidad_participacion} onChange={handleInputChange} fullWidth /> : project.modalidad_participacion}</Typography>
+                <Typography variant="body1"><strong>Modelo de Reparto:</strong> {isEditing ? <TextField name="modelo_reparto" value={editedProject.modelo_reparto} onChange={handleInputChange} fullWidth /> : project.modelo_reparto}</Typography>
+              </Paper>
+            </Grid>
+
+            {/* Contacto y Publicación */}
+            <Grid item xs={12}>
+              <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <ContactMail sx={{ mr: 1, color: 'primary.main' }} />
+                Contacto y Publicación
+              </Typography>
+              <Paper elevation={2} sx={{ padding: 2 }}>
+                <Typography variant="body1"><strong>Nombre del Encargado:</strong> {isEditing ? <TextField name="nombre_encargado" value={editedProject.nombre_encargado} onChange={handleInputChange} fullWidth /> : project.nombre_encargado}</Typography>
+                <Typography variant="body1"><strong>Correo Electrónico:</strong> {isEditing ? <TextField name="correo_contacto" value={editedProject.correo_contacto} onChange={handleInputChange} fullWidth /> : project.correo_contacto}</Typography>
+                <Typography variant="body1"><strong>Teléfono:</strong> {isEditing ? <TextField name="telefono_contacto" value={editedProject.telefono_contacto} onChange={handleInputChange} fullWidth /> : project.telefono_contacto}</Typography>
+                <FormControlLabel
+                  control={<Checkbox checked={editedProject.publicar_comunidad || false} onChange={() => setEditedProject({ ...editedProject, publicar_comunidad: !editedProject.publicar_comunidad })} />}
+                  label="Publicar mi proyecto"
+                />
+                <FormControlLabel
+                  control={<Checkbox checked={editedProject.aceptar_terminos || false} onChange={() => setEditedProject({ ...editedProject, aceptar_terminos: !editedProject.aceptar_terminos })} />}
+                  label="Acepto los términos y condiciones"
+                />
+              </Paper>
+            </Grid>
+
+            {/* Archivos Relacionados */}
+            <Grid item xs={12}>
+              <Divider sx={{ my: 2 }} />
+              <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <AttachFile sx={{ mr: 1, color: 'secondary.main' }} />
+                Archivos Relacionados
+              </Typography>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                {(Array.isArray(project.documentos_relevantes) ? project.documentos_relevantes : []).map((file, index) => (
+                  <Paper key={index} elevation={2} sx={{ padding: 1, display: 'flex', alignItems: 'center' }}>
+                    <Tooltip title="Descargar archivo">
+                      <IconButton>
+                        {renderFileIcon(file.type)}
+                      </IconButton>
+                    </Tooltip>
+                    <Typography variant="body2" sx={{ ml: 1 }}>
+                      {file.name}
+                    </Typography>
+                  </Paper>
+                ))}
+              </Box>
+            </Grid>
+          </Grid>
         )}
 
         {/* Miembros del Proyecto */}
@@ -129,7 +222,7 @@ const ProjectDetails = ({ project, onClose, onUpdateProject }) => {
             <Typography variant="h6">Miembros del Proyecto</Typography>
 
             {/* Botón para añadir miembros (solo para el administrador) */}
-            {admin?.usuario_id === localStorage.getItem('user_id') && (
+            {admin?.usuario_id === currentUserId ? (
               <Button
                 variant="contained"
                 color="primary"
@@ -138,6 +231,10 @@ const ProjectDetails = ({ project, onClose, onUpdateProject }) => {
               >
                 Añadir Miembro
               </Button>
+            ) : (
+              <Typography variant="body2" color="textSecondary">
+                Solo el administrador puede añadir miembros.
+              </Typography>
             )}
 
             <List>

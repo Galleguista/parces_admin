@@ -9,6 +9,7 @@ import theme from '../../theme';
 
 const RegisterPage = ({ onRegister }) => {
   const [nombre, setNombre] = useState('');
+  const [usuario, setUsuario] = useState('');
   const [correoElectronico, setCorreoElectronico] = useState('');
   const [password, setPassword] = useState('');
   const [celular, setCelular] = useState('');
@@ -35,6 +36,11 @@ const RegisterPage = ({ onRegister }) => {
           errorMessage = 'El nombre es obligatorio';
         }
         break;
+      case 'usuario':
+        if (!value) {
+          errorMessage = 'El nombre de usuario es obligatorio';
+        }
+        break;
       case 'correoElectronico':
         if (!isValidEmail(value)) {
           errorMessage = 'Debe ingresar un correo electrónico válido';
@@ -55,6 +61,7 @@ const RegisterPage = ({ onRegister }) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name === 'nombre') setNombre(value);
+    if (name === 'usuario') setUsuario(value);
     if (name === 'correoElectronico') setCorreoElectronico(value);
     if (name === 'password') setPassword(value);
     if (name === 'celular') setCelular(value);
@@ -69,6 +76,9 @@ const RegisterPage = ({ onRegister }) => {
     let newErrors = {};
     if (!nombre) {
       newErrors.nombre = 'El nombre es obligatorio';
+    }
+    if (!usuario) {
+      newErrors.usuario = 'El nombre de usuario es obligatorio';
     }
     if (!isValidEmail(correoElectronico)) {
       newErrors.correoElectronico = 'Debe ingresar un correo electrónico válido';
@@ -85,6 +95,7 @@ const RegisterPage = ({ onRegister }) => {
     try {
       const response = await axios.post(`${import.meta.env.VITE_API_URL}/usuarios/register`, {
         nombre,
+        usuario, // Enviamos el nombre de usuario
         correo_electronico: correoElectronico,
         password,
         celular,
@@ -151,6 +162,20 @@ const RegisterPage = ({ onRegister }) => {
                     onBlur={(e) => validateField(e.target.name, e.target.value)}
                     error={!!errors.nombre}
                     helperText={errors.nombre}
+                  />
+                  <TextField
+                    margin="normal"
+                    required
+                    fullWidth
+                    id="usuario"
+                    label="Nombre de Usuario"
+                    name="usuario"
+                    autoComplete="username"
+                    value={usuario}
+                    onChange={handleChange}
+                    onBlur={(e) => validateField(e.target.name, e.target.value)}
+                    error={!!errors.usuario}
+                    helperText={errors.usuario}
                   />
                   <TextField
                     margin="normal"
