@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react'; // Importar React y los hooks necesarios
 import {
   Dialog,
   DialogContent,
@@ -11,10 +11,6 @@ import {
   Alert,
   Tabs,
   Tab,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemText,
   TextField,
   Grid,
   Paper,
@@ -22,9 +18,20 @@ import {
   Tooltip,
   FormControlLabel,
   Checkbox,
-} from '@mui/material';
-import { ContactMail, Info, Nature, People, LocationOn, AttachFile, Edit } from '@mui/icons-material';
-import axios from 'axios';
+  List,
+} from '@mui/material'; // Componentes de Material-UI
+import {
+  Edit,
+  Info,
+  People,
+  Nature,
+  ContactMail,
+  AttachFile,
+  LocationOn,
+} from '@mui/icons-material'; // Íconos de Material-UI
+import axios from 'axios'; // Axios para peticiones HTTP
+import ProjectMembers from './ProjectMembers'; // Importar el componente `ProjectMembers`
+
 
 const instance = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000',
@@ -35,35 +42,9 @@ const ProjectDetails = ({ project, onClose, onUpdateProject }) => {
   const [editedProject, setEditedProject] = useState({ ...project });
   const [errorAlert, setErrorAlert] = useState(false);
   const [tabValue, setTabValue] = useState(0);
-  const [admin, setAdmin] = useState(null);
-  const [miembros, setMiembros] = useState([]);
 
   useEffect(() => {
     setEditedProject({ ...project });
-  }, [project]);
-
-  const fetchMiembros = async () => {
-    try {
-      const response = await instance.get(`/proyectos/${project.proyecto_id}/miembros`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-      setAdmin(response.data.administrador);
-      setMiembros(
-        response.data.miembros.filter(
-          (member) => member.usuario_id !== response.data.administrador.usuario_id
-        )
-      );
-    } catch (error) {
-      console.error('Error al obtener los miembros del proyecto:', error);
-    }
-  };
-
-  useEffect(() => {
-    if (project?.proyecto_id) {
-      fetchMiembros();
-    }
   }, [project]);
 
   const handleTabChange = (event, newValue) => {
@@ -72,10 +53,7 @@ const ProjectDetails = ({ project, onClose, onUpdateProject }) => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setEditedProject({
-      ...editedProject,
-      [name]: value,
-    });
+    setEditedProject({ ...editedProject, [name]: value });
   };
 
   const updateProject = async (updatedProject) => {
@@ -250,29 +228,8 @@ const ProjectDetails = ({ project, onClose, onUpdateProject }) => {
             </Grid>
           </Grid>
         )}
-        
         {tabValue === 1 && (
-          <Box sx={{ overflowY: 'auto', maxHeight: '65vh' }}>
-            <Typography variant="h6">Miembros</Typography>
-            <List>
-              {admin && (
-                <ListItem>
-                  <ListItemAvatar>
-                    <Avatar src={`data:image/jpeg;base64,${admin.avatar}`} alt={admin.nombre} />
-                  </ListItemAvatar>
-                  <ListItemText primary={`${admin.nombre} (Administrador)`} />
-                </ListItem>
-              )}
-              {miembros.map((member) => (
-                <ListItem key={member.usuario_id}>
-                  <ListItemAvatar>
-                    <Avatar src={`data:image/jpeg;base64,${member.avatar}`} alt={member.nombre} />
-                  </ListItemAvatar>
-                  <ListItemText primary={member.nombre} />
-                </ListItem>
-              ))}
-            </List>
-          </Box>
+          <ProjectMembers projectId={project.proyecto_id} />
         )}
       </DialogContent>
 
