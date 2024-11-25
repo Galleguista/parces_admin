@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Dialog, DialogContent, DialogTitle, Typography, Box, Avatar, Button, Alert, Tabs, Tab, List, ListItem, ListItemAvatar, ListItemText, TextField, Grid, Paper, FormControlLabel, Checkbox, Divider
+  Dialog, DialogContent, DialogTitle, Typography, Box, Avatar, Button, Alert, Tabs, Tab, List, ListItem, ListItemAvatar, ListItemText, TextField, Grid, Paper, FormControlLabel, Checkbox, Divider, IconButton, Tooltip
 } from '@mui/material';
-import { ContactMail, Info, Nature, People, LocationOn, AttachFile, Edit, Chat } from '@mui/icons-material';
+import {
+  ContactMail, Info, Nature, People, LocationOn, AttachFile, Edit, Chat
+} from '@mui/icons-material';
 import axios from 'axios';
 
 const instance = axios.create({
@@ -58,14 +60,41 @@ const ProjectDetails = ({ project, onClose, onUpdateProject }) => {
     setTabValue(newValue);
   };
 
+  // Función para manejar cambios en los inputs
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setEditedProject({
+      ...editedProject,
+      [name]: value,
+    });
+  };
+
+  // Función para actualizar el proyecto
+  const updateProject = async (updatedProject) => {
+    try {
+      const response = await instance.patch(`/proyectos/${updatedProject.proyecto_id}`, updatedProject, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      console.log("Proyecto actualizado:", response.data);
+      return response.data; // Devuelve el proyecto actualizado
+    } catch (error) {
+      console.error("Error al actualizar el proyecto:", error);
+      throw error;
+    }
+  };
+
+  // Función para guardar los cambios
   const handleSaveChanges = async () => {
     try {
-      await onUpdateProject(editedProject);
+      const updatedProject = await updateProject(editedProject);
       setIsEditing(false);
+      onUpdateProject(updatedProject); // Actualiza el estado del proyecto en el componente padre
       setErrorAlert(false);
     } catch (error) {
       setErrorAlert(true);
-      console.error("Error al actualizar el proyecto:", error);
+      console.error("Error al guardar los cambios:", error);
     }
   };
 
@@ -77,7 +106,8 @@ const ProjectDetails = ({ project, onClose, onUpdateProject }) => {
     }
 
     try {
-      await instance.post(`/proyectos/${project.proyecto_id}/miembro`, 
+      await instance.post(
+        `/proyectos/${project.proyecto_id}/miembro`,
         { usuario_id: newMemberId },
         {
           headers: {
@@ -101,6 +131,12 @@ const ProjectDetails = ({ project, onClose, onUpdateProject }) => {
     }
   };
 
+  // Función para renderizar iconos de archivos (opcional)
+  const renderFileIcon = (fileType) => {
+    // Lógica para elegir el icono según el tipo de archivo
+    return <AttachFile />;
+  };
+
   return (
     <Dialog open={Boolean(project)} onClose={onClose} maxWidth="md" fullWidth>
       {errorAlert && (
@@ -111,6 +147,9 @@ const ProjectDetails = ({ project, onClose, onUpdateProject }) => {
 
       <DialogTitle>
         {project.nombre}
+        <IconButton onClick={() => setIsEditing(!isEditing)} sx={{ ml: 2 }}>
+          <Edit />
+        </IconButton>
       </DialogTitle>
       <DialogContent>
         <Tabs value={tabValue} onChange={handleTabChange} variant="fullWidth">
@@ -119,7 +158,7 @@ const ProjectDetails = ({ project, onClose, onUpdateProject }) => {
         </Tabs>
 
         {tabValue === 0 && (
-          <Grid container spacing={2}>
+          <Grid container spacing={2} sx={{ mt: 2 }}>
             {/* Información Básica */}
             <Grid item xs={12}>
               <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
@@ -127,9 +166,29 @@ const ProjectDetails = ({ project, onClose, onUpdateProject }) => {
                 Información Básica
               </Typography>
               <Paper elevation={2} sx={{ padding: 2 }}>
-                <Typography variant="body1"><strong>Nombre:</strong> {isEditing ? <TextField name="nombre" value={editedProject.nombre} onChange={handleInputChange} fullWidth /> : project.nombre}</Typography>
-                <Typography variant="body1"><strong>Descripción:</strong> {isEditing ? <TextField name="descripcion" value={editedProject.descripcion} onChange={handleInputChange} fullWidth multiline rows={2} /> : project.descripcion}</Typography>
-                <Typography variant="body1"><strong>Objetivos:</strong> {isEditing ? <TextField name="objetivos" value={editedProject.objetivos} onChange={handleInputChange} fullWidth multiline rows={2} /> : project.objetivos}</Typography>
+                <Typography variant="body1">
+                  <strong>Nombre:</strong>{' '}
+                  {isEditing ? (
+                    <TextField name="nombre" value={editedProject.nombre} onChange={handleInputChange} fullWidth />
+                  ) : (
+                    project.nombre
+                  )}
+                </Typography>
+                <Typography variant="body1">
+                  <strong>Descripción:</strong>{' '}
+                  {isEditing ? (
+                    <TextField
+                      name="descripcion"
+                      value={editedProject.descripcion}
+                      onChange={handleInputChange}
+                      fullWidth
+                      multiline
+                      rows={2}
+                    />
+                  ) : (
+                    project.descripcion
+                  )}
+                </Typography>
               </Paper>
             </Grid>
 
@@ -140,9 +199,45 @@ const ProjectDetails = ({ project, onClose, onUpdateProject }) => {
                 Detalles del Proyecto
               </Typography>
               <Paper elevation={2} sx={{ padding: 2 }}>
-                <Typography variant="body1"><strong>Tamaño del Terreno:</strong> {isEditing ? <TextField name="tamano_terreno" value={editedProject.tamano_terreno} onChange={handleInputChange} fullWidth /> : project.tamano_terreno}</Typography>
-                <Typography variant="body1"><strong>Duración:</strong> {isEditing ? <TextField name="duracion_proyecto" value={editedProject.duracion_proyecto} onChange={handleInputChange} fullWidth /> : project.duracion_proyecto}</Typography>
-                <Typography variant="body1"><strong>Participantes Esperados:</strong> {isEditing ? <TextField name="numero_participantes" value={editedProject.numero_participantes} onChange={handleInputChange} fullWidth /> : project.numero_participantes}</Typography>
+                <Typography variant="body1">
+                  <strong>Tamaño del Terreno:</strong>{' '}
+                  {isEditing ? (
+                    <TextField
+                      name="tamano_terreno"
+                      value={editedProject.tamano_terreno}
+                      onChange={handleInputChange}
+                      fullWidth
+                    />
+                  ) : (
+                    project.tamano_terreno
+                  )}
+                </Typography>
+                <Typography variant="body1">
+                  <strong>Duración:</strong>{' '}
+                  {isEditing ? (
+                    <TextField
+                      name="duracion_proyecto"
+                      value={editedProject.duracion_proyecto}
+                      onChange={handleInputChange}
+                      fullWidth
+                    />
+                  ) : (
+                    project.duracion_proyecto
+                  )}
+                </Typography>
+                <Typography variant="body1">
+                  <strong>Participantes Esperados:</strong>{' '}
+                  {isEditing ? (
+                    <TextField
+                      name="numero_participantes"
+                      value={editedProject.numero_participantes}
+                      onChange={handleInputChange}
+                      fullWidth
+                    />
+                  ) : (
+                    project.numero_participantes
+                  )}
+                </Typography>
               </Paper>
             </Grid>
 
@@ -153,8 +248,34 @@ const ProjectDetails = ({ project, onClose, onUpdateProject }) => {
                 Participación y Recursos
               </Typography>
               <Paper elevation={2} sx={{ padding: 2 }}>
-                <Typography variant="body1"><strong>Aportes Esperados:</strong> {isEditing ? <TextField name="aportes_participantes" value={editedProject.aportes_participantes} onChange={handleInputChange} fullWidth /> : project.aportes_participantes}</Typography>
-                <Typography variant="body1"><strong>Recursos Disponibles:</strong> {isEditing ? <TextField name="recursos_disponibles" value={editedProject.recursos_disponibles} onChange={handleInputChange} fullWidth multiline rows={2} /> : project.recursos_disponibles}</Typography>
+                <Typography variant="body1">
+                  <strong>Aportes Esperados:</strong>{' '}
+                  {isEditing ? (
+                    <TextField
+                      name="aportes_participantes"
+                      value={editedProject.aportes_participantes}
+                      onChange={handleInputChange}
+                      fullWidth
+                    />
+                  ) : (
+                    project.aportes_participantes
+                  )}
+                </Typography>
+                <Typography variant="body1">
+                  <strong>Recursos Disponibles:</strong>{' '}
+                  {isEditing ? (
+                    <TextField
+                      name="recursos_disponibles"
+                      value={editedProject.recursos_disponibles}
+                      onChange={handleInputChange}
+                      fullWidth
+                      multiline
+                      rows={2}
+                    />
+                  ) : (
+                    project.recursos_disponibles
+                  )}
+                </Typography>
               </Paper>
             </Grid>
 
@@ -165,8 +286,32 @@ const ProjectDetails = ({ project, onClose, onUpdateProject }) => {
                 Modalidad de Aparcería
               </Typography>
               <Paper elevation={2} sx={{ padding: 2 }}>
-                <Typography variant="body1"><strong>Modalidad:</strong> {isEditing ? <TextField name="modalidad_participacion" value={editedProject.modalidad_participacion} onChange={handleInputChange} fullWidth /> : project.modalidad_participacion}</Typography>
-                <Typography variant="body1"><strong>Modelo de Reparto:</strong> {isEditing ? <TextField name="modelo_reparto" value={editedProject.modelo_reparto} onChange={handleInputChange} fullWidth /> : project.modelo_reparto}</Typography>
+                <Typography variant="body1">
+                  <strong>Modalidad:</strong>{' '}
+                  {isEditing ? (
+                    <TextField
+                      name="modalidad_participacion"
+                      value={editedProject.modalidad_participacion}
+                      onChange={handleInputChange}
+                      fullWidth
+                    />
+                  ) : (
+                    project.modalidad_participacion
+                  )}
+                </Typography>
+                <Typography variant="body1">
+                  <strong>Modelo de Reparto:</strong>{' '}
+                  {isEditing ? (
+                    <TextField
+                      name="modelo_reparto"
+                      value={editedProject.modelo_reparto}
+                      onChange={handleInputChange}
+                      fullWidth
+                    />
+                  ) : (
+                    project.modelo_reparto
+                  )}
+                </Typography>
               </Paper>
             </Grid>
 
@@ -177,42 +322,91 @@ const ProjectDetails = ({ project, onClose, onUpdateProject }) => {
                 Contacto y Publicación
               </Typography>
               <Paper elevation={2} sx={{ padding: 2 }}>
-                <Typography variant="body1"><strong>Nombre del Encargado:</strong> {isEditing ? <TextField name="nombre_encargado" value={editedProject.nombre_encargado} onChange={handleInputChange} fullWidth /> : project.nombre_encargado}</Typography>
-                <Typography variant="body1"><strong>Correo Electrónico:</strong> {isEditing ? <TextField name="correo_contacto" value={editedProject.correo_contacto} onChange={handleInputChange} fullWidth /> : project.correo_contacto}</Typography>
-                <Typography variant="body1"><strong>Teléfono:</strong> {isEditing ? <TextField name="telefono_contacto" value={editedProject.telefono_contacto} onChange={handleInputChange} fullWidth /> : project.telefono_contacto}</Typography>
-                <FormControlLabel
-                  control={<Checkbox checked={editedProject.publicar_comunidad || false} onChange={() => setEditedProject({ ...editedProject, publicar_comunidad: !editedProject.publicar_comunidad })} />}
-                  label="Publicar mi proyecto"
-                />
-                <FormControlLabel
-                  control={<Checkbox checked={editedProject.aceptar_terminos || false} onChange={() => setEditedProject({ ...editedProject, aceptar_terminos: !editedProject.aceptar_terminos })} />}
-                  label="Acepto los términos y condiciones"
-                />
+                <Typography variant="body1">
+                  <strong>Nombre del Encargado:</strong>{' '}
+                  {isEditing ? (
+                    <TextField
+                      name="nombre_encargado"
+                      value={editedProject.nombre_encargado}
+                      onChange={handleInputChange}
+                      fullWidth
+                    />
+                  ) : (
+                    project.nombre_encargado
+                  )}
+                </Typography>
+                <Typography variant="body1">
+                  <strong>Correo Electrónico:</strong>{' '}
+                  {isEditing ? (
+                    <TextField
+                      name="correo_contacto"
+                      value={editedProject.correo_contacto}
+                      onChange={handleInputChange}
+                      fullWidth
+                    />
+                  ) : (
+                    project.correo_contacto
+                  )}
+                </Typography>
+                <Typography variant="body1">
+                  <strong>Teléfono:</strong>{' '}
+                  {isEditing ? (
+                    <TextField
+                      name="telefono_contacto"
+                      value={editedProject.telefono_contacto}
+                      onChange={handleInputChange}
+                      fullWidth
+                    />
+                  ) : (
+                    project.telefono_contacto
+                  )}
+                </Typography>
+                {isEditing && (
+                  <>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={editedProject.publicar_comunidad || false}
+                          onChange={() =>
+                            setEditedProject({
+                              ...editedProject,
+                              publicar_comunidad: !editedProject.publicar_comunidad,
+                            })
+                          }
+                        />
+                      }
+                      label="Publicar mi proyecto"
+                    />
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={editedProject.aceptar_terminos || false}
+                          onChange={() =>
+                            setEditedProject({
+                              ...editedProject,
+                              aceptar_terminos: !editedProject.aceptar_terminos,
+                            })
+                          }
+                        />
+                      }
+                      label="Acepto los términos y condiciones"
+                    />
+                  </>
+                )}
               </Paper>
             </Grid>
 
-            {/* Archivos Relacionados */}
-            <Grid item xs={12}>
-              <Divider sx={{ my: 2 }} />
-              <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                <AttachFile sx={{ mr: 1, color: 'secondary.main' }} />
-                Archivos Relacionados
-              </Typography>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                {(Array.isArray(project.documentos_relevantes) ? project.documentos_relevantes : []).map((file, index) => (
-                  <Paper key={index} elevation={2} sx={{ padding: 1, display: 'flex', alignItems: 'center' }}>
-                    <Tooltip title="Descargar archivo">
-                      <IconButton>
-                        {renderFileIcon(file.type)}
-                      </IconButton>
-                    </Tooltip>
-                    <Typography variant="body2" sx={{ ml: 1 }}>
-                      {file.name}
-                    </Typography>
-                  </Paper>
-                ))}
-              </Box>
-            </Grid>
+            {/* Botones de acción */}
+            {isEditing && (
+              <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+                <Button variant="outlined" onClick={() => setIsEditing(false)} sx={{ mr: 2 }}>
+                  Cancelar
+                </Button>
+                <Button variant="contained" color="primary" onClick={handleSaveChanges}>
+                  Guardar Cambios
+                </Button>
+              </Grid>
+            )}
           </Grid>
         )}
 
