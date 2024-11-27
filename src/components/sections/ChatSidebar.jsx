@@ -3,89 +3,106 @@ import {
   Drawer,
   List,
   ListItem,
-  ListItemAvatar,
-  ListItemText,
   Avatar,
   Typography,
-  IconButton,
   Divider,
   Box,
   TextField,
+  IconButton,
   Button,
 } from '@mui/material';
-import { Close, Send, Group } from '@mui/icons-material'; // Usar íconos de Material UI
+import { Send, ArrowBack } from '@mui/icons-material';
 import axios from 'axios';
+import io from 'socket.io-client';
 
 const ChatSidebar = ({ open, handleClose }) => {
   const [conversations, setConversations] = useState([]);
   const [selectedConversationId, setSelectedConversationId] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
+  const [socket, setSocket] = useState(null);
 
-  // Cargar conversaciones recientes
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    const newSocket = io(import.meta.env.VITE_API_URL, {
+      transports: ['websocket'],
+      query: { usuario_id: 'user-id-from-token' },
+    });
+
+    newSocket.on('newMessage', (message) => {
+      if (message.conversacion_id === selectedConversationId) {
+        setMessages((prev) => [...prev, message]);
+      }
+    });
+
+    setSocket(newSocket);
+
+    return () => {
+      newSocket.disconnect();
+    };
+  }, [selectedConversationId]);
+
   const loadConversations = async () => {
     try {
+      console.log('Cargando conversaciones...');
       const response = await axios.get(`${import.meta.env.VITE_API_URL}/conversaciones/recent`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
       });
       setConversations(response.data);
+      console.log('Conversaciones cargadas:', response.data);
     } catch (error) {
-      console.error('Error al cargar las conversaciones recientes:', error);
+      console.error('Error al cargar conversaciones:', error);
     }
   };
 
-  // Cargar mensajes de una conversación específica
   const loadMessages = async (conversationId) => {
     try {
+      console.log(`Cargando mensajes para la conversación: ${conversationId}`);
       const response = await axios.get(`${import.meta.env.VITE_API_URL}/mensajes/${conversationId}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
       });
-      setMessages(response.data); // Mensajes ordenados por el backend
+      setMessages(response.data);
+      console.log('Mensajes cargados:', response.data);
     } catch (error) {
-      console.error('Error al cargar los mensajes:', error);
+      console.error('Error al cargar mensajes:', error);
     }
   };
 
-  // Enviar un nuevo mensaje
   const sendMessage = async () => {
     if (!newMessage.trim()) return;
 
+    const payload = {
+      conversacion_id: selectedConversationId,
+      contenido: { texto: newMessage },
+    };
+
     try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/mensajes`,
-        {
-          conversacion_id: selectedConversationId,
-          contenido: { texto: newMessage },
+      console.log('Enviando mensaje:', payload);
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/mensajes`, payload, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        }
-      );
-      setMessages((prevMessages) => [response.data, ...prevMessages]);
+      });
+      console.log('Mensaje enviado:', response.data);
+      setMessages((prev) => [...prev, response.data]); // Añade el mensaje al estado local
       setNewMessage('');
     } catch (error) {
-      console.error('Error al enviar el mensaje:', error);
+      console.error('Error al enviar mensaje:', error);
     }
   };
 
-  // Cargar conversaciones al abrir la barra lateral
   useEffect(() => {
-    if (open) {
-      loadConversations();
-    }
+    if (open) loadConversations();
   }, [open]);
 
-  // Cargar mensajes al seleccionar una conversación
   useEffect(() => {
-    if (selectedConversationId) {
-      loadMessages(selectedConversationId);
-    }
+    if (selectedConversationId) loadMessages(selectedConversationId);
   }, [selectedConversationId]);
 
   return (
@@ -95,91 +112,107 @@ const ChatSidebar = ({ open, handleClose }) => {
       onClose={handleClose}
       PaperProps={{
         sx: {
-          width: 300,
+          width: 400,
           borderTopRightRadius: 8,
           borderBottomRightRadius: 8,
-          overflowY: 'auto',
         },
       }}
     >
-      <Box sx={{ p: 2 }}>
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-          <Typography variant="h6">{selectedConversationId ? 'Chat' : 'Chats Recientes'}</Typography>
-          <IconButton onClick={handleClose}>
-            <Close />
-          </IconButton>
-        </Box>
-        <Divider />
-
+      <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', height: '100%' }}>
         {!selectedConversationId ? (
-          <List>
-            {conversations.map((conversation) => (
-              <ListItem
-                key={conversation.conversacion_id}
-                button
-                onClick={() => setSelectedConversationId(conversation.conversacion_id)}
-                sx={{
-                  borderRadius: 1,
-                  mb: 1,
-                  '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.05)' },
-                }}
-              >
-                <ListItemAvatar>
-                  {conversation.avatar ? (
-                    <Avatar src={conversation.avatar} alt={conversation.nombre || 'Chat'} />
-                  ) : (
-                    <Avatar>
-                      <Group />
-                    </Avatar>
-                  )}
-                </ListItemAvatar>
-                <ListItemText
-                  primary={conversation.nombre || 'Chat sin nombre'}
-                  secondary={
-                    conversation.ultimoMensaje
-                      ? `${conversation.ultimoMensaje.usuario?.nombre || 'Desconocido'}: ${
-                          conversation.ultimoMensaje.contenido || 'Mensaje vacío'
-                        }`
-                      : 'Sin mensajes recientes'
-                  }
-                  secondaryTypographyProps={{
-                    sx: { color: 'text.secondary', fontSize: 12 },
-                  }}
-                />
-              </ListItem>
-            ))}
-          </List>
-        ) : (
-          <Box>
-            <Button onClick={() => setSelectedConversationId(null)} sx={{ mb: 2 }}>
-              Volver a Conversaciones
-            </Button>
+          <>
+            <Typography variant="h6">Chats Recientes</Typography>
+            <Divider sx={{ my: 2 }} />
             <List>
-              {messages.map((message) => (
-                <ListItem key={message.mensaje_id}>
-                  <ListItemAvatar>
-                    <Avatar src={message.usuario?.avatar || 'https://via.placeholder.com/40'} />
-                  </ListItemAvatar>
-                  <ListItemText
-                    primary={message.usuario?.nombre || 'Desconocido'}
-                    secondary={message.contenido.texto || ''}
-                  />
+              {conversations.map((conversation) => (
+                <ListItem
+                  key={conversation.conversacion_id}
+                  button
+                  onClick={() => setSelectedConversationId(conversation.conversacion_id)}
+                  sx={{
+                    mb: 1,
+                    borderRadius: 2,
+                    '&:hover': {
+                      backgroundColor: '#f0f0f0',
+                    },
+                  }}
+                >
+                  <Avatar src={conversation.avatar || ''} />
+                  <Box sx={{ ml: 2, flex: 1 }}>
+                    <Typography variant="subtitle1" noWrap>
+                      {conversation.nombre || 'Sin nombre'}
+                    </Typography>
+                    <Typography variant="body2" color="textSecondary" noWrap>
+                      {conversation.ultimoMensaje?.contenido?.texto || 'Sin mensajes recientes'}
+                    </Typography>
+                  </Box>
                 </ListItem>
               ))}
             </List>
-            <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
+          </>
+        ) : (
+          <>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <IconButton onClick={() => setSelectedConversationId(null)}>
+                <ArrowBack />
+              </IconButton>
+              <Typography variant="h6" sx={{ ml: 2 }}>
+                Conversación
+              </Typography>
+            </Box>
+            <Divider sx={{ mb: 2 }} />
+            <Box
+              sx={{
+                flex: 1,
+                overflowY: 'auto',
+                display: 'flex',
+                flexDirection: 'column-reverse',
+                mb: 2,
+              }}
+            >
+              <List>
+                {messages.map((message) => (
+                  <ListItem
+                    key={message.mensaje_id}
+                    sx={{
+                      display: 'flex',
+                      justifyContent:
+                        message.usuario_id === 'user-id-from-token' ? 'flex-end' : 'flex-start',
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        maxWidth: '70%',
+                        p: 1,
+                        borderRadius: 2,
+                        backgroundColor:
+                          message.usuario_id === 'user-id-from-token' ? '#007bff' : '#f0f0f0',
+                        color:
+                          message.usuario_id === 'user-id-from-token' ? 'white' : 'black',
+                      }}
+                    >
+                      <Typography variant="body2">{message.contenido.texto}</Typography>
+                      <Typography variant="caption" sx={{ mt: 1, display: 'block' }}>
+                        {new Date(message.fecha_envio).toLocaleTimeString()}
+                      </Typography>
+                    </Box>
+                  </ListItem>
+                ))}
+              </List>
+            </Box>
+            <Divider sx={{ mb: 2 }} />
+            <Box sx={{ display: 'flex' }}>
               <TextField
                 fullWidth
-                variant="outlined"
                 placeholder="Escribe un mensaje..."
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
               />
-              <IconButton color="primary" onClick={sendMessage}>
+              <IconButton onClick={sendMessage} color="primary" sx={{ ml: 1 }}>
                 <Send />
               </IconButton>
             </Box>
-          </Box>
+          </>
         )}
       </Box>
     </Drawer>
