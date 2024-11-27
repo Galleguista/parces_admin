@@ -3,47 +3,63 @@ import {
   Drawer,
   List,
   ListItem,
+  ListItemAvatar,
+  ListItemText,
   Avatar,
   Typography,
+  IconButton,
   Divider,
   Box,
   TextField,
-  IconButton,
   Button,
 } from '@mui/material';
-import { Send, ArrowBack } from '@mui/icons-material';
+import { Send, Group } from '@mui/icons-material';
 import axios from 'axios';
-import io from 'socket.io-client';
 
 const ChatSidebar = ({ open, handleClose }) => {
   const [conversations, setConversations] = useState([]);
+  const [users, setUsers] = useState({});
   const [selectedConversationId, setSelectedConversationId] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
-  const [socket, setSocket] = useState(null);
 
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
+  // Obtener datos de usuario o grupo asociados a las conversaciones
+  const enrichConversations = async (conversations) => {
+    const userIds = Array.from(
+      new Set(conversations.map((c) => c.usuario_id).filter((id) => id))
+    );
 
-    const newSocket = io(import.meta.env.VITE_API_URL, {
-      transports: ['websocket'],
-      query: { usuario_id: 'user-id-from-token' },
-    });
+    if (userIds.length === 0) return conversations;
 
-    newSocket.on('newMessage', (message) => {
-      if (message.conversacion_id === selectedConversationId) {
-        setMessages((prev) => [...prev, message]);
-      }
-    });
+    try {
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/usuarios`, {
+        params: { userIds: userIds.join(',') },
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      const usersById = response.data.reduce((acc, user) => {
+        acc[user.usuario_id] = user;
+        return acc;
+      }, {});
 
-    setSocket(newSocket);
+      setUsers(usersById);
 
-    return () => {
-      newSocket.disconnect();
-    };
-  }, [selectedConversationId]);
+      return conversations.map((conversation) => {
+        const user = usersById[conversation.usuario_id];
+        return {
+          ...conversation,
+          nombre: user?.nombre || 'Conversación sin nombre',
+          avatar: user?.avatar || null,
+        };
+      });
+    } catch (error) {
+      console.error('Error al cargar usuarios asociados a conversaciones:', error);
+      return conversations;
+    }
+  };
 
+  // Cargar conversaciones recientes
   const loadConversations = async () => {
     try {
       console.log('Cargando conversaciones...');
@@ -52,30 +68,36 @@ const ChatSidebar = ({ open, handleClose }) => {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
       });
-      setConversations(response.data);
-      console.log('Conversaciones cargadas:', response.data);
+      const enrichedConversations = await enrichConversations(response.data);
+      setConversations(enrichedConversations);
+      console.log('Conversaciones cargadas:', enrichedConversations);
     } catch (error) {
-      console.error('Error al cargar conversaciones:', error);
+      console.error('Error al cargar las conversaciones:', error);
     }
   };
 
+  // Cargar mensajes de una conversación
   const loadMessages = async (conversationId) => {
     try {
       console.log(`Cargando mensajes para la conversación: ${conversationId}`);
-      const response = await axios.get(`${import.meta.env.VITE_API_URL}/mensajes/${conversationId}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/mensajes/${conversationId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        }
+      );
       setMessages(response.data);
       console.log('Mensajes cargados:', response.data);
     } catch (error) {
-      console.error('Error al cargar mensajes:', error);
+      console.error('Error al cargar los mensajes:', error);
     }
   };
 
+  // Enviar mensaje
   const sendMessage = async () => {
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim() || !selectedConversationId) return;
 
     const payload = {
       conversacion_id: selectedConversationId,
@@ -84,26 +106,40 @@ const ChatSidebar = ({ open, handleClose }) => {
 
     try {
       console.log('Enviando mensaje:', payload);
-      const response = await axios.post(`${import.meta.env.VITE_API_URL}/mensajes`, payload, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/mensajes`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        }
+      );
       console.log('Mensaje enviado:', response.data);
-      setMessages((prev) => [...prev, response.data]); // Añade el mensaje al estado local
       setNewMessage('');
+      await loadMessages(selectedConversationId); // Actualiza los mensajes
     } catch (error) {
-      console.error('Error al enviar mensaje:', error);
+      console.error('Error al enviar el mensaje:', error);
     }
   };
 
+  // Actualización automática de mensajes
   useEffect(() => {
-    if (open) loadConversations();
-  }, [open]);
-
-  useEffect(() => {
-    if (selectedConversationId) loadMessages(selectedConversationId);
+    let interval;
+    if (selectedConversationId) {
+      interval = setInterval(() => {
+        loadMessages(selectedConversationId);
+      }, 2000);
+    }
+    return () => clearInterval(interval);
   }, [selectedConversationId]);
+
+  // Cargar conversaciones cuando se abra el ChatSidebar
+  useEffect(() => {
+    if (open) {
+      loadConversations();
+    }
+  }, [open]);
 
   return (
     <Drawer
@@ -112,103 +148,69 @@ const ChatSidebar = ({ open, handleClose }) => {
       onClose={handleClose}
       PaperProps={{
         sx: {
-          width: 400,
+          width: 300,
           borderTopRightRadius: 8,
           borderBottomRightRadius: 8,
+          overflowY: 'auto',
         },
       }}
     >
-      <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <Box sx={{ p: 2 }}>
         {!selectedConversationId ? (
           <>
             <Typography variant="h6">Chats Recientes</Typography>
-            <Divider sx={{ my: 2 }} />
+            <Divider />
             <List>
               {conversations.map((conversation) => (
                 <ListItem
                   key={conversation.conversacion_id}
                   button
                   onClick={() => setSelectedConversationId(conversation.conversacion_id)}
-                  sx={{
-                    mb: 1,
-                    borderRadius: 2,
-                    '&:hover': {
-                      backgroundColor: '#f0f0f0',
-                    },
-                  }}
                 >
-                  <Avatar src={conversation.avatar || ''} />
-                  <Box sx={{ ml: 2, flex: 1 }}>
-                    <Typography variant="subtitle1" noWrap>
-                      {conversation.nombre || 'Sin nombre'}
-                    </Typography>
-                    <Typography variant="body2" color="textSecondary" noWrap>
-                      {conversation.ultimoMensaje?.contenido?.texto || 'Sin mensajes recientes'}
-                    </Typography>
-                  </Box>
+                  <ListItemAvatar>
+                    {conversation.avatar ? (
+                      <Avatar src={conversation.avatar} />
+                    ) : (
+                      <Avatar>
+                        <Group />
+                      </Avatar>
+                    )}
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary={conversation.nombre || 'Chat sin nombre'}
+                    secondary={conversation.ultimoMensaje?.contenido || 'Sin mensajes recientes'}
+                  />
                 </ListItem>
               ))}
             </List>
           </>
         ) : (
           <>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-              <IconButton onClick={() => setSelectedConversationId(null)}>
-                <ArrowBack />
-              </IconButton>
-              <Typography variant="h6" sx={{ ml: 2 }}>
-                Conversación
-              </Typography>
-            </Box>
-            <Divider sx={{ mb: 2 }} />
-            <Box
-              sx={{
-                flex: 1,
-                overflowY: 'auto',
-                display: 'flex',
-                flexDirection: 'column-reverse',
-                mb: 2,
-              }}
-            >
-              <List>
-                {messages.map((message) => (
-                  <ListItem
-                    key={message.mensaje_id}
-                    sx={{
-                      display: 'flex',
-                      justifyContent:
-                        message.usuario_id === 'user-id-from-token' ? 'flex-end' : 'flex-start',
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        maxWidth: '70%',
-                        p: 1,
-                        borderRadius: 2,
-                        backgroundColor:
-                          message.usuario_id === 'user-id-from-token' ? '#007bff' : '#f0f0f0',
-                        color:
-                          message.usuario_id === 'user-id-from-token' ? 'white' : 'black',
-                      }}
-                    >
-                      <Typography variant="body2">{message.contenido.texto}</Typography>
-                      <Typography variant="caption" sx={{ mt: 1, display: 'block' }}>
-                        {new Date(message.fecha_envio).toLocaleTimeString()}
-                      </Typography>
-                    </Box>
+            <Button onClick={() => setSelectedConversationId(null)}>Volver a Conversaciones</Button>
+            <List>
+              {messages.map((message) => {
+                const user = users[message.usuario_id] || {};
+                return (
+                  <ListItem key={message.mensaje_id}>
+                    <ListItemAvatar>
+                      <Avatar src={user.avatar} />
+                    </ListItemAvatar>
+                    <ListItemText
+                      primary={user.nombre || 'Desconocido'}
+                      secondary={message.contenido?.texto}
+                    />
                   </ListItem>
-                ))}
-              </List>
-            </Box>
-            <Divider sx={{ mb: 2 }} />
-            <Box sx={{ display: 'flex' }}>
+                );
+              })}
+            </List>
+            <Box sx={{ display: 'flex', mt: 2 }}>
               <TextField
                 fullWidth
                 placeholder="Escribe un mensaje..."
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
               />
-              <IconButton onClick={sendMessage} color="primary" sx={{ ml: 1 }}>
+              <IconButton onClick={sendMessage}>
                 <Send />
               </IconButton>
             </Box>
