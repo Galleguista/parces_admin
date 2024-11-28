@@ -107,6 +107,7 @@ const ProfileSection = () => {
               sx={{ width: 120, height: 120, border: '4px solid', borderColor: 'primary.main', mb: 2 }}
             />
             <Typography variant="h5" sx={{ fontWeight: 'bold' }}>{profile.nombre}</Typography>
+            <Typography variant="h7" sx={{ fontWeight: 'bold' }}>{profile.usuario}</Typography>
             <Typography variant="body1" color="textSecondary">{profile.correo_electronico}</Typography>
             <Typography variant="body1" color="textSecondary">{profile.celular}</Typography>
             <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>{profile.direccion}</Typography>

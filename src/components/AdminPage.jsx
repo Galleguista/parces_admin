@@ -8,7 +8,7 @@ import Sidebar from './main/Sidebar';
 import ChatSidebar from './sections/ChatSidebar';
 import ProfileSection from './sections/profile';
 import ProjectsSection from './sections/project_section/projects';
-import GroupsSection from './sections/groups';
+import GroupsSectionUI from './sections/groups_section/GroupsSectionUI';
 import ResourcesSection from './sections/resources';
 import AchievementsSection from './sections/achievements';
 import ForumSection from './sections/forum';
@@ -145,7 +145,7 @@ const AdminPage = () => {
         
         {activeSection === 'profile' && <ProfileSection />}
         {activeSection === 'projects' && <ProjectsSection />}
-        {activeSection === 'groups' && <GroupsSection />}
+        {activeSection === 'groups' && <GroupsSectionUI />}
         {activeSection === 'resources' && <ResourcesSection />}
         {activeSection === 'achievements' && <AchievementsSection />}
         {activeSection === 'forum' && <ForumSection />}

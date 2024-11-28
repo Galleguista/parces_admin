@@ -14,23 +14,39 @@ import {
   Button,
 } from '@mui/material';
 import { Send, Group } from '@mui/icons-material';
+import { useTheme } from '@mui/material/styles';
 import axios from 'axios';
 
 const ChatSidebar = ({ open, handleClose }) => {
+  const theme = useTheme();
   const [conversations, setConversations] = useState([]);
   const [users, setUsers] = useState({});
+  const [tipoConversaciones, setTipoConversaciones] = useState({});
   const [selectedConversationId, setSelectedConversationId] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
+  const [intervalId, setIntervalId] = useState(null);
 
-  // Obtener datos de usuario o grupo asociados a las conversaciones
-  const enrichConversations = async (conversations) => {
-    const userIds = Array.from(
-      new Set(conversations.map((c) => c.usuario_id).filter((id) => id))
-    );
+  const baseUrl = import.meta.env.VITE_PUBLIC_URL;
 
-    if (userIds.length === 0) return conversations;
+  const constructAvatarUrl = (avatarPath) => {
+    return avatarPath ? `${baseUrl}${avatarPath}` : null;
+  };
 
+  const fetchTiposConversacion = async () => {
+    try {
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/tipo-conversacion`);
+      const tipoMap = response.data.reduce((acc, tipo) => {
+        acc[tipo.tipo_conversacion_id] = tipo.nombre;
+        return acc;
+      }, {});
+      setTipoConversaciones(tipoMap);
+    } catch (error) {
+      console.error('Error al cargar tipos de conversación:', error);
+    }
+  };
+
+  const fetchUsers = async (userIds) => {
     try {
       const response = await axios.get(`${import.meta.env.VITE_API_URL}/usuarios`, {
         params: { userIds: userIds.join(',') },
@@ -38,48 +54,61 @@ const ChatSidebar = ({ open, handleClose }) => {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
       });
-      const usersById = response.data.reduce((acc, user) => {
-        acc[user.usuario_id] = user;
+
+      return response.data.reduce((acc, user) => {
+        acc[user.usuario_id] = {
+          ...user,
+          avatar: constructAvatarUrl(user.avatar),
+        };
         return acc;
       }, {});
-
-      setUsers(usersById);
-
-      return conversations.map((conversation) => {
-        const user = usersById[conversation.usuario_id];
-        return {
-          ...conversation,
-          nombre: user?.nombre || 'Conversación sin nombre',
-          avatar: user?.avatar || null,
-        };
-      });
     } catch (error) {
-      console.error('Error al cargar usuarios asociados a conversaciones:', error);
-      return conversations;
+      console.error('Error al cargar usuarios:', error);
+      return {};
     }
   };
 
-  // Cargar conversaciones recientes
   const loadConversations = async () => {
     try {
-      console.log('Cargando conversaciones...');
-      const response = await axios.get(`${import.meta.env.VITE_API_URL}/conversaciones/recent`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/conversaciones/recent`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        }
+      );
+
+      const conversationData = response.data;
+      const userIds = Array.from(
+        new Set(conversationData.map((conv) => conv.usuario_id).filter((id) => id))
+      );
+
+      const userMap = await fetchUsers(userIds);
+
+      const enrichedConversations = conversationData.map((conversation) => {
+        const user = userMap[conversation.usuario_id] || {};
+        const tipo = tipoConversaciones[conversation.tipo_conversacion_id] || 'Desconocido';
+        return {
+          ...conversation,
+          nombre:
+            tipo === 'privado'
+              ? user.nombre || 'Usuario desconocido'
+              : conversation.nombre || 'Grupo sin nombre',
+          avatar: tipo === 'privado' ? user.avatar : null,
+          tipo,
+        };
       });
-      const enrichedConversations = await enrichConversations(response.data);
+
       setConversations(enrichedConversations);
-      console.log('Conversaciones cargadas:', enrichedConversations);
+      setUsers(userMap);
     } catch (error) {
       console.error('Error al cargar las conversaciones:', error);
     }
   };
 
-  // Cargar mensajes de una conversación
   const loadMessages = async (conversationId) => {
     try {
-      console.log(`Cargando mensajes para la conversación: ${conversationId}`);
       const response = await axios.get(
         `${import.meta.env.VITE_API_URL}/mensajes/${conversationId}`,
         {
@@ -89,13 +118,11 @@ const ChatSidebar = ({ open, handleClose }) => {
         }
       );
       setMessages(response.data);
-      console.log('Mensajes cargados:', response.data);
     } catch (error) {
       console.error('Error al cargar los mensajes:', error);
     }
   };
 
-  // Enviar mensaje
   const sendMessage = async () => {
     if (!newMessage.trim() || !selectedConversationId) return;
 
@@ -105,7 +132,6 @@ const ChatSidebar = ({ open, handleClose }) => {
     };
 
     try {
-      console.log('Enviando mensaje:', payload);
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL}/mensajes`,
         payload,
@@ -115,28 +141,41 @@ const ChatSidebar = ({ open, handleClose }) => {
           },
         }
       );
-      console.log('Mensaje enviado:', response.data);
       setNewMessage('');
-      await loadMessages(selectedConversationId); // Actualiza los mensajes
+      await loadMessages(selectedConversationId);
     } catch (error) {
       console.error('Error al enviar el mensaje:', error);
     }
   };
 
-  // Actualización automática de mensajes
-  useEffect(() => {
-    let interval;
-    if (selectedConversationId) {
-      interval = setInterval(() => {
-        loadMessages(selectedConversationId);
-      }, 2000);
-    }
-    return () => clearInterval(interval);
-  }, [selectedConversationId]);
+  const handleConversationSelect = async (conversationId) => {
+    setSelectedConversationId(conversationId);
 
-  // Cargar conversaciones cuando se abra el ChatSidebar
+    if (intervalId) {
+      clearInterval(intervalId);
+      setIntervalId(null);
+    }
+
+    await loadMessages(conversationId);
+
+    const id = setInterval(() => {
+      loadMessages(conversationId);
+    }, 2000);
+    setIntervalId(id);
+  };
+
+  const handleBackToConversations = () => {
+    setSelectedConversationId(null);
+
+    if (intervalId) {
+      clearInterval(intervalId);
+      setIntervalId(null);
+    }
+  };
+
   useEffect(() => {
     if (open) {
+      fetchTiposConversacion();
       loadConversations();
     }
   }, [open]);
@@ -158,26 +197,30 @@ const ChatSidebar = ({ open, handleClose }) => {
       <Box sx={{ p: 2 }}>
         {!selectedConversationId ? (
           <>
-            <Typography variant="h6">Chats Recientes</Typography>
+            <Typography variant="h6" sx={{ mb: 2 }}>
+              Chats Recientes
+            </Typography>
             <Divider />
             <List>
               {conversations.map((conversation) => (
                 <ListItem
                   key={conversation.conversacion_id}
                   button
-                  onClick={() => setSelectedConversationId(conversation.conversacion_id)}
+                  onClick={() => handleConversationSelect(conversation.conversacion_id)}
                 >
                   <ListItemAvatar>
-                    {conversation.avatar ? (
-                      <Avatar src={conversation.avatar} />
-                    ) : (
-                      <Avatar>
+                    {conversation.tipo === 'grupo' ? (
+                      <Avatar sx={{ backgroundColor: theme.palette.primary.main }}>
                         <Group />
                       </Avatar>
+                    ) : conversation.avatar ? (
+                      <Avatar src={conversation.avatar} />
+                    ) : (
+                      <Avatar />
                     )}
                   </ListItemAvatar>
                   <ListItemText
-                    primary={conversation.nombre || 'Chat sin nombre'}
+                    primary={conversation.nombre}
                     secondary={conversation.ultimoMensaje?.contenido || 'Sin mensajes recientes'}
                   />
                 </ListItem>
@@ -186,20 +229,34 @@ const ChatSidebar = ({ open, handleClose }) => {
           </>
         ) : (
           <>
-            <Button onClick={() => setSelectedConversationId(null)}>Volver a Conversaciones</Button>
-            <List>
+            <Button onClick={handleBackToConversations}>Volver a Conversaciones</Button>
+            <List sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 2 }}>
               {messages.map((message) => {
+                const isOwnMessage = message.usuario_id === localStorage.getItem('user_id');
                 const user = users[message.usuario_id] || {};
                 return (
-                  <ListItem key={message.mensaje_id}>
-                    <ListItemAvatar>
-                      <Avatar src={user.avatar} />
-                    </ListItemAvatar>
-                    <ListItemText
-                      primary={user.nombre || 'Desconocido'}
-                      secondary={message.contenido?.texto}
-                    />
-                  </ListItem>
+                  <Box
+                    key={message.mensaje_id}
+                    sx={{
+                      alignSelf: isOwnMessage ? 'flex-end' : 'flex-start',
+                      maxWidth: '80%',
+                      backgroundColor: isOwnMessage
+                        ? theme.palette.primary.main
+                        : theme.palette.grey[200],
+                      color: isOwnMessage ? '#fff' : '#000',
+                      padding: '10px',
+                      borderRadius: '15px',
+                      boxShadow: 1,
+                      wordWrap: 'break-word',
+                    }}
+                  >
+                    {!isOwnMessage && (
+                      <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 0.5 }}>
+                        {user.nombre || 'Desconocido'}
+                      </Typography>
+                    )}
+                    <Typography variant="body2">{message.contenido?.texto}</Typography>
+                  </Box>
                 );
               })}
             </List>
