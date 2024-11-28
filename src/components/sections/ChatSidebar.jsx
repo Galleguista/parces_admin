@@ -13,7 +13,7 @@ import {
   TextField,
   Button,
 } from '@mui/material';
-import { Send, Group } from '@mui/icons-material';
+import { Send, Group, Work } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 import axios from 'axios';
 
@@ -22,6 +22,7 @@ const ChatSidebar = ({ open, handleClose }) => {
   const [conversations, setConversations] = useState([]);
   const [users, setUsers] = useState({});
   const [tipoConversaciones, setTipoConversaciones] = useState({});
+  const [proyectos, setProyectos] = useState({});
   const [selectedConversationId, setSelectedConversationId] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
@@ -43,6 +44,25 @@ const ChatSidebar = ({ open, handleClose }) => {
       setTipoConversaciones(tipoMap);
     } catch (error) {
       console.error('Error al cargar tipos de conversación:', error);
+    }
+  };
+
+  
+  const fetchProyectos = async () => {
+    try {
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/proyectos`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+
+      const proyectoMap = response.data.reduce((acc, proyecto) => {
+        acc[proyecto.conversacion_id] = proyecto.nombre;
+        return acc;
+      }, {});
+      setProyectos(proyectoMap);
+    } catch (error) {
+      console.error('Error al cargar proyectos:', error);
     }
   };
 
@@ -78,34 +98,55 @@ const ChatSidebar = ({ open, handleClose }) => {
           },
         }
       );
-
+  
       const conversationData = response.data;
-      const userIds = Array.from(
-        new Set(conversationData.map((conv) => conv.usuario_id).filter((id) => id))
-      );
-
-      const userMap = await fetchUsers(userIds);
-
+  
+      const userIdsToFetch = [];
       const enrichedConversations = conversationData.map((conversation) => {
-        const user = userMap[conversation.usuario_id] || {};
         const tipo = tipoConversaciones[conversation.tipo_conversacion_id] || 'Desconocido';
-        return {
-          ...conversation,
-          nombre:
-            tipo === 'privado'
-              ? user.nombre || 'Usuario desconocido'
-              : conversation.nombre || 'Grupo sin nombre',
-          avatar: tipo === 'privado' ? user.avatar : null,
-          tipo,
-        };
+  
+        let nombre = conversation.nombre || 'Desconocido';
+        let avatar = null;
+  
+        if (tipo === 'privado') {
+          // Filtrar los user_ids para encontrar el otro usuario
+          const otherUserId = conversation.user_ids.find(
+            (id) => id !== localStorage.getItem('user_id')
+          );
+          if (otherUserId) {
+            userIdsToFetch.push(otherUserId);
+            conversation.otherUserId = otherUserId; // Guardamos para usar después
+          }
+        } else if (tipo === 'grupo') {
+          nombre = conversation.nombre || 'Grupo sin nombre';
+        } else if (tipo === 'proyecto') {
+          nombre = proyectos[conversation.conversacion_id] || 'Proyecto sin nombre';
+        }
+  
+        return { ...conversation, nombre, avatar, tipo };
       });
-
+  
+      // Obtener datos de los usuarios con los IDs recopilados
+      if (userIdsToFetch.length > 0) {
+        const userMap = await fetchUsers(userIdsToFetch);
+  
+        enrichedConversations.forEach((conversation) => {
+          if (conversation.tipo === 'privado' && conversation.otherUserId) {
+            const user = userMap[conversation.otherUserId];
+            if (user) {
+              conversation.nombre = user.nombre || 'Usuario desconocido';
+              conversation.avatar = user.avatar || null;
+            }
+          }
+        });
+      }
+  
       setConversations(enrichedConversations);
-      setUsers(userMap);
     } catch (error) {
       console.error('Error al cargar las conversaciones:', error);
     }
   };
+  
 
   const loadMessages = async (conversationId) => {
     try {
@@ -176,6 +217,7 @@ const ChatSidebar = ({ open, handleClose }) => {
   useEffect(() => {
     if (open) {
       fetchTiposConversacion();
+      fetchProyectos();
       loadConversations();
     }
   }, [open]);
@@ -212,6 +254,10 @@ const ChatSidebar = ({ open, handleClose }) => {
                     {conversation.tipo === 'grupo' ? (
                       <Avatar sx={{ backgroundColor: theme.palette.primary.main }}>
                         <Group />
+                      </Avatar>
+                    ) : conversation.tipo === 'proyecto' ? (
+                      <Avatar sx={{ backgroundColor: theme.palette.primary.dark }}>
+                        <Work />
                       </Avatar>
                     ) : conversation.avatar ? (
                       <Avatar src={conversation.avatar} />
