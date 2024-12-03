@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react'; // Importar React y los hooks necesarios
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
   DialogTitle,
   Typography,
   Box,
-  Avatar,
   IconButton,
   Button,
   Alert,
@@ -19,7 +18,7 @@ import {
   FormControlLabel,
   Checkbox,
   List,
-} from '@mui/material'; // Componentes de Material-UI
+} from '@mui/material';
 import {
   Edit,
   Info,
@@ -27,11 +26,11 @@ import {
   Nature,
   ContactMail,
   AttachFile,
-  LocationOn,
-} from '@mui/icons-material'; // Íconos de Material-UI
-import axios from 'axios'; // Axios para peticiones HTTP
-import ProjectMembers from './ProjectMembers'; // Importar el componente `ProjectMembers`
-
+  LocationOn
+} from '@mui/icons-material';
+import axios from 'axios';
+import ProjectMembers from './ProjectMembers';
+import ProjectLog from './ProjectLog';
 
 const instance = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000',
@@ -129,6 +128,7 @@ const ProjectDetails = ({ project, onClose, onUpdateProject }) => {
         <Tabs value={tabValue} onChange={handleTabChange} variant="fullWidth" sx={{ mb: 2 }}>
           <Tab label="Información" icon={<Info />} />
           <Tab label="Miembros" icon={<People />} />
+          <Tab label="Bitácora" icon={<Nature />} />
         </Tabs>
 
         {tabValue === 0 && (
@@ -228,9 +228,8 @@ const ProjectDetails = ({ project, onClose, onUpdateProject }) => {
             </Grid>
           </Grid>
         )}
-        {tabValue === 1 && (
-          <ProjectMembers projectId={project.proyecto_id} />
-        )}
+        {tabValue === 1 && <ProjectMembers projectId={project.proyecto_id} />}
+        {tabValue === 2 && <ProjectLog projectId={project.proyecto_id} />}
       </DialogContent>
 
       {isEditing && (

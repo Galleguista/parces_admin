@@ -1,9 +1,37 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react'; // Importar React y los hooks necesarios
 import {
-  Dialog, DialogContent, DialogTitle, Typography, Box, Grid, Divider, Avatar, IconButton, Tooltip, Paper, TextField, Button, Checkbox, FormControlLabel, Alert, Tabs, Tab, List, ListItem, ListItemAvatar, ListItemText
-} from '@mui/material';
-import { ContactMail, Info, Nature, People, LocationOn, AttachFile, Edit, Chat } from '@mui/icons-material';
-import axios from 'axios';
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  Typography,
+  Box,
+  Avatar,
+  IconButton,
+  Button,
+  Alert,
+  Tabs,
+  Tab,
+  TextField,
+  Grid,
+  Paper,
+  Divider,
+  Tooltip,
+  FormControlLabel,
+  Checkbox,
+  List,
+} from '@mui/material'; // Componentes de Material-UI
+import {
+  Edit,
+  Info,
+  People,
+  Nature,
+  ContactMail,
+  AttachFile,
+  LocationOn,
+} from '@mui/icons-material'; // Íconos de Material-UI
+import axios from 'axios'; // Axios para peticiones HTTP
+import ProjectMembers from './ProjectMembers'; // Importar el componente `ProjectMembers`
+
 
 const instance = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000',
@@ -14,151 +42,93 @@ const ProjectDetails = ({ project, onClose, onUpdateProject }) => {
   const [editedProject, setEditedProject] = useState({ ...project });
   const [errorAlert, setErrorAlert] = useState(false);
   const [tabValue, setTabValue] = useState(0);
-  const [isChatOpen, setIsChatOpen] = useState(false);
-  const [messages, setMessages] = useState([]);
-  const [newMessage, setNewMessage] = useState('');
-  const [miembros, setMiembros] = useState([]);
 
   useEffect(() => {
     setEditedProject({ ...project });
   }, [project]);
 
-  // Fetch miembros del proyecto
-  const fetchMiembros = async (proyectoId) => {
-    try {
-      const response = await instance.get(`/proyectos/${proyectoId}/miembros`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-      setMiembros(response.data);
-    } catch (error) {
-      console.error('Error al obtener los miembros del proyecto:', error);
-    }
-  };
-
-  useEffect(() => {
-    if (tabValue === 1 && project?.proyecto_id) {
-      fetchMiembros(project.proyecto_id);
-    }
-  }, [tabValue, project]);
-
-  const handleEditToggle = () => {
-    setIsEditing(!isEditing);
-    setEditedProject({ ...project });
-  };
-
-  const handleInputChange = (event) => {
-    const { name, value } = event.target;
-    setEditedProject({
-      ...editedProject,
-      [name]: value,
-    });
-  };
-
-  const handleSaveChanges = async () => {
-    try {
-      await onUpdateProject(editedProject);
-      setIsEditing(false);
-      setErrorAlert(false);
-    } catch (error) {
-      if (error.response && error.response.status === 403) {
-        setErrorAlert(true);
-      } else {
-        console.error("Error al actualizar el proyecto:", error);
-      }
-    }
-  };
-
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
   };
 
-  const handleStartProjectChat = async () => {
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setEditedProject({ ...editedProject, [name]: value });
+  };
+
+  const updateProject = async (updatedProject) => {
     try {
-      const response = await instance.post('/conversaciones/project-chat', { projectId: project.proyecto_id }, {
+      const response = await instance.patch(`/proyectos/${updatedProject.proyecto_id}`, updatedProject, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
       });
-
-      setIsChatOpen(true);
-      setTabValue(2);
-      fetchMessages(response.data.conversacion_id);
+      return response.data;
     } catch (error) {
-      console.error('Error al iniciar chat de proyecto:', error);
+      console.error('Error al actualizar el proyecto:', error);
+      throw error;
     }
   };
 
-  const fetchMessages = async (conversacionId) => {
+  const handleSaveChanges = async () => {
     try {
-      const response = await instance.get(`/mensajes/${conversacionId}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-      setMessages(response.data);
+      const updatedProject = await updateProject(editedProject);
+      setIsEditing(false);
+      onUpdateProject(updatedProject);
+      setErrorAlert(false);
     } catch (error) {
-      console.error('Error fetching messages:', error);
-    }
-  };
-
-  const handleSendMessage = async () => {
-    if (newMessage.trim() === '') return;
-
-    try {
-      const response = await instance.post('/mensajes', {
-        conversacion_id: project.conversacion_id,
-        contenido: { texto: newMessage },
-      }, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-      setMessages([...messages, response.data]);
-      setNewMessage('');
-    } catch (error) {
-      console.error('Error sending message:', error);
+      setErrorAlert(true);
     }
   };
 
   return (
-    <Dialog open={Boolean(project)} onClose={onClose} maxWidth="md" fullWidth PaperProps={{ sx: { borderRadius: '16px', padding: 3, position: 'relative' } }}>
+    <Dialog
+      open={Boolean(project)}
+      onClose={onClose}
+      maxWidth="md"
+      fullWidth
+      PaperProps={{
+        sx: {
+          position: 'absolute',
+          top: '10%',
+          left: '50%',
+          transform: 'translate(-50%, 0)',
+          borderRadius: 3,
+          boxShadow: 6,
+          overflow: 'hidden',
+          height: '80vh',
+          display: 'flex',
+          flexDirection: 'column',
+        },
+      }}
+    >
       {errorAlert && (
-        <Alert severity="error" onClose={() => setErrorAlert(false)} sx={{ mb: 2, position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 }}>
+        <Alert severity="error" onClose={() => setErrorAlert(false)} sx={{ mb: 2 }}>
           No tienes permiso para realizar esta acción.
         </Alert>
       )}
-
-      <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <Avatar
-            src={`data:image/jpeg;base64,${project.imagen_representativa}`}
-            alt={project.nombre}
-            sx={{ width: 60, height: 60, mr: 2 }}
-          />
-          {!isEditing ? (
-            <Typography variant="h4" component="div">{project.nombre}</Typography>
-          ) : (
-            <TextField
-              variant="outlined"
-              name="nombre"
-              value={editedProject.nombre}
-              onChange={handleInputChange}
-              fullWidth
-            />
-          )}
+      <DialogTitle>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Typography variant="h6" noWrap sx={{ maxWidth: '80%' }}>
+            {project.nombre}
+          </Typography>
+          <IconButton
+            onClick={() => setIsEditing(!isEditing)}
+            sx={{
+              position: 'relative',
+              color: 'primary.main',
+              '&:hover': { color: 'primary.dark' },
+            }}
+          >
+            <Edit />
+          </IconButton>
         </Box>
-        <IconButton onClick={handleEditToggle}>
-          <Edit color="primary" />
-        </IconButton>
       </DialogTitle>
 
-      <DialogContent>
-        <Tabs value={tabValue} onChange={handleTabChange} variant="fullWidth" indicatorColor="primary" textColor="primary">
+      <DialogContent sx={{ flex: 1, overflow: 'auto', p: 2 }}>
+        <Tabs value={tabValue} onChange={handleTabChange} variant="fullWidth" sx={{ mb: 2 }}>
           <Tab label="Información" icon={<Info />} />
           <Tab label="Miembros" icon={<People />} />
-          <Tab label="Chat del Proyecto" icon={<Chat />} />
         </Tabs>
 
         {tabValue === 0 && (
@@ -258,75 +228,35 @@ const ProjectDetails = ({ project, onClose, onUpdateProject }) => {
             </Grid>
           </Grid>
         )}
-
-        {/* Tab de Miembros */}
         {tabValue === 1 && (
-          <Box sx={{ p: 2 }}>
-            <Typography variant="h6">Miembros del Proyecto</Typography>
-            <List>
-              {miembros.length > 0 ? (
-                miembros.map((member) => (
-                  <ListItem key={member.id}>
-                    <ListItemAvatar>
-                      <Avatar src={`data:image/jpeg;base64,${member.avatar}`} alt={member.nombre} />
-                    </ListItemAvatar>
-                    <ListItemText primary={member.nombre} secondary={member.email} />
-                  </ListItem>
-                ))
-              ) : (
-                <Typography variant="body2" color="textSecondary">
-                  No hay miembros registrados en este proyecto.
-                </Typography>
-              )}
-            </List>
-          </Box>
-        )}
-
-        {/* Tab de Chat */}
-        {tabValue === 2 && (
-          <Box sx={{ p: 2 }}>
-            {!isChatOpen ? (
-              <Button variant="contained" color="primary" onClick={handleStartProjectChat} startIcon={<Chat />}>
-                Iniciar Chat del Proyecto
-              </Button>
-            ) : (
-              <>
-                <Typography variant="h6">Chat del Proyecto</Typography>
-                <Box sx={{ overflowY: 'auto', maxHeight: 300 }}>
-                  {messages.map((message) => (
-                    <Box key={message.mensaje_id} sx={{ mb: 2 }}>
-                      <Typography variant="body2" color="textSecondary">
-                        {message.usuario ? message.usuario.nombre : 'Usuario desconocido'}:
-                      </Typography>
-                      <Typography variant="body1">{message.contenido.texto}</Typography>
-                    </Box>
-                  ))}
-                </Box>
-                <TextField
-                  fullWidth
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  placeholder="Escribe un mensaje..."
-                />
-                <Button onClick={handleSendMessage} variant="contained" color="primary" endIcon={<Chat />}>
-                  Enviar
-                </Button>
-              </>
-            )}
-          </Box>
-        )}
-
-        {isEditing && (
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
-            <Button variant="outlined" color="secondary" onClick={handleEditToggle}>
-              Cancelar
-            </Button>
-            <Button variant="contained" color="primary" onClick={handleSaveChanges}>
-              Guardar Cambios
-            </Button>
-          </Box>
+          <ProjectMembers projectId={project.proyecto_id} />
         )}
       </DialogContent>
+
+      {isEditing && (
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            py: 2,
+            position: 'sticky',
+            bottom: 0,
+            backgroundColor: 'white',
+            boxShadow: 3,
+            zIndex: 10,
+          }}
+        >
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleSaveChanges}
+            sx={{ width: '90%' }}
+          >
+            Guardar Cambios
+          </Button>
+        </Box>
+      )}
     </Dialog>
   );
 };
