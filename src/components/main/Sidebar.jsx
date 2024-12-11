@@ -8,30 +8,32 @@ import SchoolIcon from '@mui/icons-material/School';
 import StarIcon from '@mui/icons-material/Star';
 import ForumIcon from '@mui/icons-material/Forum';
 import EventIcon from '@mui/icons-material/Event';
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings'; // Asegúrate de importar esto
 import { StackedBarChart } from '@mui/icons-material';
 
 const drawerWidth = 280;
 
-const sections = [
-  { id: 'profile', icon: <AssignmentIcon />, label: 'Perfil' },
-  { id: 'projects', icon: <ExploreIcon />, label: 'Proyectos' },
-  { id: 'groups', icon: <GroupIcon />, label: 'Grupos' },
-  { id: 'resources', icon: <SchoolIcon />, label: 'Recursos' },
-  { id: 'achievements', icon: <StarIcon />, label: 'Logros' },
-  { id: 'forum', icon: <ForumIcon />, label: 'Foro' },
-  { id: 'events', icon: <EventIcon />, label: 'Eventos' },
-  { id: 'feed', icon: <StackedBarChart />, label: 'Novedades' },
-];
-
 const Sidebar = ({ activeSection, handleSectionChange, userProfile, mobileOpen, handleDrawerToggle }) => {
   const theme = useTheme();
+  const isAdmin = userProfile.isAdmin;
 
-  // Contenido del Sidebar
+  const sections = [
+    { id: 'profile', icon: <AssignmentIcon />, label: 'Perfil' },
+    { id: 'projects', icon: <ExploreIcon />, label: 'Proyectos' },
+    { id: 'groups', icon: <GroupIcon />, label: 'Grupos' },
+    { id: 'resources', icon: <SchoolIcon />, label: 'Recursos' },
+    { id: 'achievements', icon: <StarIcon />, label: 'Logros' },
+    { id: 'forum', icon: <ForumIcon />, label: 'Foro' },
+    { id: 'events', icon: <EventIcon />, label: 'Eventos' },
+    { id: 'feed', icon: <StackedBarChart />, label: 'Novedades' },
+    ...(isAdmin ? [{ id: 'admin', icon: <AdminPanelSettingsIcon />, label: 'Admin' }] : []) // Añade la sección de admin si es administrador
+  ];
+
   const drawerContent = (
     <>
       <Box display="flex" flexDirection="column" alignItems="center" mb={2}>
         <Avatar
-          src={userProfile.avatarUrl || 'https://via.placeholder.com/150'} // Usamos avatarUrl en lugar de avatarBase64
+          src={userProfile.avatarUrl || 'https://via.placeholder.com/150'} 
           alt="Admin User"
           sx={{ width: 100, height: 100, mb: 1 }}
         />

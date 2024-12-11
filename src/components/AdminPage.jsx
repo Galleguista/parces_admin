@@ -14,10 +14,11 @@ import AchievementsSection from './sections/achievements';
 import ForumSection from './sections/forum';
 import EventsSection from './sections/events';
 import Feed from './sections/Feed';
+import AdminSection from './sections/admin_section/AdminSection'
 
 const drawerWidth = 280;
 const API_URL = `${import.meta.env.VITE_API_URL}/usuarios/me`;
-const ROLE_URL = `${import.meta.env.VITE_API_URL}/roles`; // URL base para roles
+const ROLE_URL = `${import.meta.env.VITE_API_URL}/roles`;
 
 const sections = [
   { id: 'profile', label: 'Perfil' },
@@ -28,19 +29,20 @@ const sections = [
   { id: 'forum', label: 'Foro' },
   { id: 'events', label: 'Eventos' },
   { id: 'feed', label: 'Novedades' },
+  { id: 'admin', label: 'Vista administrador' },
+
 ];
 
 const AdminPage = () => {
   const [activeSection, setActiveSection] = useState('profile');
   const [chatSidebarOpen, setChatSidebarOpen] = useState(false);
-  const [userProfile, setUserProfile] = useState({ nombre: '', avatarUrl: '', roleName: '' });
+  const [userProfile, setUserProfile] = useState({ nombre: '', avatarUrl: '', roleName: '', });
   const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     const token = localStorage.getItem('token');
 
-    // Decodificamos el JWT para obtener el `role_id`
     const decodeToken = (token) => {
       try {
         const payload = JSON.parse(atob(token.split('.')[1]));
@@ -58,17 +60,18 @@ const AdminPage = () => {
             Authorization: `Bearer ${token}`,
           },
         });
-
+    
         const publicUrl = import.meta.env.VITE_PUBLIC_URL;
         const profileData = {
           ...response.data,
           avatarUrl: response.data.avatar ? `${publicUrl}${response.data.avatar}` : '',
         };
-        setUserProfile(profileData);
+        setUserProfile(profileData);  // Asegúrate de que response.data incluya isAdmin
       } catch (error) {
         console.error('Error fetching user profile:', error);
       }
     };
+    
 
     const fetchRoleDetails = async (roleId) => {
       try {
@@ -89,7 +92,7 @@ const AdminPage = () => {
       const roleId = decodeToken(token);
       if (roleId) {
         fetchUserProfile();
-        fetchRoleDetails(roleId); // Consulta directa al endpoint `/roles/:id`
+        fetchRoleDetails(roleId);
       }
     }
   }, []);
@@ -151,6 +154,7 @@ const AdminPage = () => {
         {activeSection === 'forum' && <ForumSection />}
         {activeSection === 'events' && <EventsSection />}
         {activeSection === 'feed' && <Feed />}
+        {activeSection === 'admin' && <AdminSection />}
       </Box>
       <ChatSidebar open={chatSidebarOpen} handleClose={handleMessagesClose} />
     </Box>
