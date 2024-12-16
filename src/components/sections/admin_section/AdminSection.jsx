@@ -1,45 +1,73 @@
-// AdminSection/AdminSection.jsx
 import React, { useState } from 'react';
-import {
-  Box, Tabs, Tab, Typography
-} from '@mui/material';
+import { Box, Grid, Typography, Paper, Button, styled } from '@mui/material';
+import UserIcon from '@mui/icons-material/Person';
+import ProjectIcon from '@mui/icons-material/Work';
+import ResourceIcon from '@mui/icons-material/Extension';
+
 import AdminUsers from './options/AdminUsers';
 import AdminProjects from './options/AdminProjects';
 import AdminResources from './options/AdminResources';
 
-const AdminSection = () => {
-  const [activeTab, setActiveTab] = useState(0);
+// Styled component para los ítems de navegación
+const Item = styled(Paper)(({ theme }) => ({
+  cursor: 'pointer',
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  height: 150,
+  borderRadius: '20px', // Bordes redondeados
+  backgroundColor: theme.palette.background.paper, // Fondo personalizado
+  transition: 'transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out',
+  '&:hover': {
+    transform: 'scale(1.05)',
+    boxShadow: `0px 6px 15px ${theme.palette.primary.main}` // Sombra más prominente en hover
+  }
+}));
 
-  const handleTabChange = (event, newValue) => {
-    setActiveTab(newValue);
-  };
+const AdminPage = () => {
+  const [view, setView] = useState('main'); // Estado para controlar la vista actual
 
-  const renderSection = () => {
-    switch (activeTab) {
-      case 0:
+  const renderView = () => {
+    switch (view) {
+      case 'users':
         return <AdminUsers />;
-      case 1:
+      case 'projects':
         return <AdminProjects />;
-      case 2:
+      case 'resources':
         return <AdminResources />;
       default:
-        return <AdminUsers />;
+        return (
+          <Grid container spacing={3}>
+            <Grid item xs={12} sm={4}>
+              <Item onClick={() => setView('users')}>
+                <UserIcon sx={{ fontSize: 50, color: 'primary.main' }} />
+                <Typography>Gestionar Usuarios</Typography>
+              </Item>
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <Item onClick={() => setView('projects')}>
+                <ProjectIcon sx={{ fontSize: 50, color: 'primary.main' }} />
+                <Typography>Gestionar Proyectos</Typography>
+              </Item>
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <Item onClick={() => setView('resources')}>
+                <ResourceIcon sx={{ fontSize: 50, color: 'primary.main' }} />
+                <Typography>Gestionar Recursos</Typography>
+              </Item>
+            </Grid>
+          </Grid>
+        );
     }
   };
 
   return (
-    <Box sx={{ width: '100%' }}>
-      <Typography variant="h4" sx={{ p: 2 }}>Administración</Typography>
-      <Tabs value={activeTab} onChange={handleTabChange} centered>
-        <Tab label="Usuarios" />
-        <Tab label="Proyectos" />
-        <Tab label="Recursos" />
-      </Tabs>
-      <Box sx={{ p: 3 }}>
-        {renderSection()}
-      </Box>
+    <Box sx={{ flexGrow: 1, p: 3 }}>
+      <Typography variant="h4" sx={{ mb: 4, textAlign: 'center' }}>Panel de Administración</Typography>
+      {renderView()}
     </Box>
   );
 };
 
-export default AdminSection;
+export default AdminPage;
