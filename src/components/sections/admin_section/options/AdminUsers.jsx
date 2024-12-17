@@ -18,32 +18,42 @@ import {
 } from '@mui/material';
 import axios from 'axios';
 
+const API_URL = `${import.meta.env.VITE_API_URL}/usuarios`;
+
 const AdminUsers = () => {
-  const [users, setUsers] = useState([]); // Inicializamos como un arreglo vacío
+  const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [editData, setEditData] = useState({});
   const [openEditDialog, setOpenEditDialog] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
 
-  // Cargar usuarios al montar el componente
   useEffect(() => {
     fetchUsers();
   }, []);
 
   const fetchUsers = async () => {
     try {
-      const accessToken = localStorage.getItem('accessToken'); // Obtener el token desde el almacenamiento local
-      const response = await axios.get('/usuarios', {
+      const accessToken = localStorage.getItem('token');
+      const response = await axios.get(API_URL, {
         headers: {
-          Authorization: `Bearer ${accessToken}`, // Enviamos solo el accessToken
+          Authorization: `Bearer ${accessToken}`,
         },
       });
 
-      console.log('Usuarios encontrados:', response.data); // Mostrar los datos recibidos
-      setUsers(response.data); // Asumimos que el backend devuelve un arreglo directamente
+      console.log('Respuesta del servidor:', response.data);
+
+      const data = response.data;
+      if (Array.isArray(data)) {
+        setUsers(data);
+      } else if (data && Array.isArray(data.users)) {
+        setUsers(data.users); 
+      } else {
+        console.error('La respuesta no contiene un arreglo válido.');
+        setUsers([]);
+      }
     } catch (error) {
       console.error('Error al obtener los usuarios:', error);
-      setUsers([]); // En caso de error, establecer como un arreglo vacío
+      setUsers([]);
     }
   };
 
@@ -55,14 +65,14 @@ const AdminUsers = () => {
 
   const handleDeleteClick = async (userId) => {
     try {
-      const accessToken = localStorage.getItem('accessToken'); // Obtener el token
-      await axios.delete(`/usuarios/${userId}`, {
+      const accessToken = localStorage.getItem('token');
+      await axios.delete(`${API_URL}/${userId}`, {
         headers: {
-          Authorization: `Bearer ${accessToken}`, // Enviamos solo el accessToken
+          Authorization: `Bearer ${accessToken}`,
         },
       });
       setSnackbarMessage('Usuario eliminado correctamente.');
-      fetchUsers(); // Actualizar la lista de usuarios
+      fetchUsers();
     } catch (error) {
       console.error('Error al eliminar el usuario:', error);
       setSnackbarMessage('Error al eliminar el usuario.');
@@ -71,11 +81,11 @@ const AdminUsers = () => {
 
   const handleEditSubmit = async () => {
     try {
-      const accessToken = localStorage.getItem('accessToken'); // Obtener el token
+      const accessToken = localStorage.getItem('token');
       const { usuario_id, ...updateData } = editData;
-      await axios.put(`/usuarios/${usuario_id}`, updateData, {
+      await axios.put(`${API_URL}/${usuario_id}`, updateData, {
         headers: {
-          Authorization: `Bearer ${accessToken}`, // Enviamos solo el accessToken
+          Authorization: `Bearer ${accessToken}`,
         },
       });
       setSnackbarMessage('Usuario actualizado correctamente.');
@@ -108,7 +118,7 @@ const AdminUsers = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {users && users.length > 0 ? (
+            {Array.isArray(users) && users.length > 0 ? (
               users.map((user) => (
                 <TableRow key={user.usuario_id}>
                   <TableCell>{user.nombre}</TableCell>
@@ -154,28 +164,30 @@ const AdminUsers = () => {
               margin="dense"
               label="Nombre"
               fullWidth
-              value={editData.nombre}
+              value={editData.nombre || ''}
               onChange={(e) => setEditData({ ...editData, nombre: e.target.value })}
             />
             <TextField
               margin="dense"
               label="Correo Electrónico"
               fullWidth
-              value={editData.correo_electronico}
-              onChange={(e) => setEditData({ ...editData, correo_electronico: e.target.value })}
+              value={editData.correo_electronico || ''}
+              onChange={(e) =>
+                setEditData({ ...editData, correo_electronico: e.target.value })
+              }
             />
             <TextField
               margin="dense"
               label="Celular"
               fullWidth
-              value={editData.celular}
+              value={editData.celular || ''}
               onChange={(e) => setEditData({ ...editData, celular: e.target.value })}
             />
             <TextField
               margin="dense"
               label="Dirección"
               fullWidth
-              value={editData.direccion}
+              value={editData.direccion || ''}
               onChange={(e) => setEditData({ ...editData, direccion: e.target.value })}
             />
           </DialogContent>
