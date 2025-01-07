@@ -164,7 +164,7 @@ const ProjectsSection = () => {
                 </Avatar>
                 <CardContent sx={{ textAlign: 'center', padding: 1 }}>
                   <Typography gutterBottom variant="h6" component="div">{project.nombre}</Typography>
-                  <Stack direction="row" spacing={1} sx={{ justifyContent: 'center', marginY: 1 }}>
+                  <Stack direction="row" spacing={1}  sx={{ justifyContent: 'center', marginY: 1 }}>
                     <Chip label={project.categoria} color="primary" size="small" />
                     <Tooltip title="Ubicación del proyecto">
                       <Chip label={project.ubicacion} size="small" />
@@ -180,7 +180,7 @@ const ProjectsSection = () => {
                       <FavoriteIcon />
                     </IconButton>
                   </Tooltip>
-                  <Tooltip title="Compartir">
+                  <Tooltip title="Compartir"> 
                     <IconButton aria-label="share project" sx={{ color: 'black' }}>
                       <ShareIcon />
                     </IconButton>

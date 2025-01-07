@@ -64,7 +64,6 @@ const AdminPage = () => {
 
   return (
     <Box sx={{ flexGrow: 1, p: 3 }}>
-      <Typography variant="h4" sx={{ mb: 4, textAlign: 'center' }}>Panel de Administración</Typography>
       {renderView()}
     </Box>
   );
