@@ -192,9 +192,7 @@ const AdminUsers = () => {
 
   return (
     <Box sx={{ p: isMobile ? 1 : 2, width: '100%' }}>
-      <Typography variant="h5" gutterBottom sx={{ fontSize: isMobile ? '1.2rem' : '1.5rem' }}>
-        Gestión de Usuarios
-      </Typography>
+
       <TableContainer sx={{ maxWidth: '100%', overflowX: 'auto' }}>
         <Table stickyHeader aria-label="sticky table">
           <TableHead>

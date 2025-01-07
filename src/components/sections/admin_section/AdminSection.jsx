@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Box, Grid, Typography, Paper, Button, styled } from '@mui/material';
+import { Box, Grid, Typography, Paper, Button, styled, IconButton } from '@mui/material';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import UserIcon from '@mui/icons-material/Person';
 import ProjectIcon from '@mui/icons-material/Work';
 import ResourceIcon from '@mui/icons-material/Extension';
@@ -8,7 +9,6 @@ import AdminUsers from './options/AdminUsers';
 import AdminProjects from './options/AdminProjects';
 import AdminResources from './options/AdminResources';
 
-// Styled component para los ítems de navegación
 const Item = styled(Paper)(({ theme }) => ({
   cursor: 'pointer',
   display: 'flex',
@@ -16,26 +16,61 @@ const Item = styled(Paper)(({ theme }) => ({
   alignItems: 'center',
   justifyContent: 'center',
   height: 150,
-  borderRadius: '20px', // Bordes redondeados
-  backgroundColor: theme.palette.background.paper, // Fondo personalizado
+  borderRadius: '20px',
+  backgroundColor: theme.palette.background.paper, 
   transition: 'transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out',
   '&:hover': {
     transform: 'scale(1.05)',
-    boxShadow: `0px 6px 15px ${theme.palette.primary.main}` // Sombra más prominente en hover
+    boxShadow: `0px 6px 15px ${theme.palette.primary.main}`
   }
 }));
 
 const AdminPage = () => {
-  const [view, setView] = useState('main'); // Estado para controlar la vista actual
-
+  const [view, setView] = useState('main');
   const renderView = () => {
     switch (view) {
       case 'users':
-        return <AdminUsers />;
+        return (
+          <>
+            <Box sx={{ mb: 2 }}>
+              <IconButton onClick={() => setView('main')} color="primary">
+                <ArrowBackIcon />
+              </IconButton>
+            </Box>
+            <Typography variant="h4" align="center" gutterBottom>
+              Gestión de Usuarios
+            </Typography>
+            <AdminUsers />
+          </>
+        );
       case 'projects':
-        return <AdminProjects />;
+        return (
+          <>
+            <Box sx={{ mb: 2 }}>
+              <IconButton onClick={() => setView('main')} color="primary">
+                <ArrowBackIcon />
+              </IconButton>
+            </Box>
+            <Typography variant="h4" align="center" gutterBottom>
+              Gestión de Proyectos
+            </Typography>
+            <AdminProjects />
+          </>
+        );
       case 'resources':
-        return <AdminResources />;
+        return (
+          <>
+            <Box sx={{ mb: 2 }}>
+              <IconButton onClick={() => setView('main')} color="primary">
+                <ArrowBackIcon />
+              </IconButton>
+            </Box>
+            <Typography variant="h4" align="center" gutterBottom>
+              Gestión de Recursos
+            </Typography>
+            <AdminResources />
+          </>
+        );
       default:
         return (
           <Grid container spacing={3}>
