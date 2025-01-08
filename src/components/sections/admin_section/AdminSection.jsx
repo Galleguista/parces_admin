@@ -9,6 +9,7 @@ import AdminUsers from './options/AdminUsers';
 import AdminProjects from './options/AdminProjects';
 import AdminResources from './options/AdminResources';
 
+// Styled component para los ítems de navegación
 const Item = styled(Paper)(({ theme }) => ({
   cursor: 'pointer',
   display: 'flex',
@@ -16,58 +17,71 @@ const Item = styled(Paper)(({ theme }) => ({
   alignItems: 'center',
   justifyContent: 'center',
   height: 150,
-  borderRadius: '20px',
-  backgroundColor: theme.palette.background.paper, 
+  borderRadius: '20px', // Bordes redondeados
+  backgroundColor: theme.palette.background.paper, // Fondo personalizado
   transition: 'transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out',
   '&:hover': {
     transform: 'scale(1.05)',
-    boxShadow: `0px 6px 15px ${theme.palette.primary.main}`
+    boxShadow: `0px 6px 15px ${theme.palette.primary.main}` // Sombra más prominente en hover
   }
 }));
 
 const AdminPage = () => {
-  const [view, setView] = useState('main');
+  const [view, setView] = useState('main'); // Estado para controlar la vista actual
+
   const renderView = () => {
     switch (view) {
       case 'users':
         return (
           <>
-            <Box sx={{ mb: 2 }}>
-              <IconButton onClick={() => setView('main')} color="primary">
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2, position: 'relative' }}>
+              <IconButton
+                onClick={() => setView('main')}
+                color="primary"
+                sx={{ position: 'absolute', left: 0 }}
+              >
                 <ArrowBackIcon />
               </IconButton>
+              <Typography variant="h4" align="center">
+                Gestión de Usuarios
+              </Typography>
             </Box>
-            <Typography variant="h4" align="center" gutterBottom>
-              Gestión de Usuarios
-            </Typography>
             <AdminUsers />
           </>
         );
       case 'projects':
         return (
           <>
-            <Box sx={{ mb: 2 }}>
-              <IconButton onClick={() => setView('main')} color="primary">
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2, position: 'relative' }}>
+              <IconButton
+                onClick={() => setView('main')}
+                color="primary"
+                sx={{ position: 'absolute', left: 0 }}
+              >
                 <ArrowBackIcon />
               </IconButton>
+              <Typography variant="h4" align="center">
+                Gestión de Proyectos
+              </Typography>
             </Box>
-            <Typography variant="h4" align="center" gutterBottom>
-              Gestión de Proyectos
-            </Typography>
             <AdminProjects />
           </>
         );
       case 'resources':
         return (
           <>
-            <Box sx={{ mb: 2 }}>
-              <IconButton onClick={() => setView('main')} color="primary">
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2, position: 'relative' }}>
+              <IconButton
+                onClick={() => setView('main')}
+                color="primary"
+                sx={{ position: 'absolute', left: 0 }}
+              >
                 <ArrowBackIcon />
               </IconButton>
+              <Typography variant="h4" align="center">
+                Gestión de Recursos
+              </Typography>
             </Box>
-            <Typography variant="h4" align="center" gutterBottom>
-              Gestión de Recursos
-            </Typography>
             <AdminResources />
           </>
         );

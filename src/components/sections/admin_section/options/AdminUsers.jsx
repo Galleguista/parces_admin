@@ -216,7 +216,7 @@ const AdminUsers = () => {
                       ? user.roles.map((role) => (
                           <Box key={role.userol_id} sx={{ display: 'flex', alignItems: 'center' }}>
                             {role.role_name}
-                            <IconButton size={isMobile ? 'small' : 'medium'} onClick={() => handleRemoveRole(role.userol_id)}>
+                            <IconButton size={isMobile ? 'small' : 'medium'} onClick={() => handleRemoveRole(role.userol_id)} title="Eliminar rol">
                               <DeleteIcon />
                             </IconButton>
                           </Box>
@@ -224,16 +224,16 @@ const AdminUsers = () => {
                       : 'Sin roles'}
                   </TableCell>
                   <TableCell>
-                    <IconButton size={isMobile ? 'small' : 'medium'} onClick={() => handleEditClick(user)}>
+                    <IconButton size={isMobile ? 'small' : 'medium'} onClick={() => handleEditClick(user)} title="Editar usuario">
                       <EditIcon />
                     </IconButton>
-                    <IconButton size={isMobile ? 'small' : 'medium'} onClick={() => handleDeleteClick(user.usuario_id)}>
+                    <IconButton size={isMobile ? 'small' : 'medium'} onClick={() => handleDeleteClick(user.usuario_id)} title="Eliminar usuario">
                       <DeleteIcon />
                     </IconButton>
-                    <IconButton size={isMobile ? 'small' : 'medium'} onClick={() => handleManageRolesClick(user)}>
+                    <IconButton size={isMobile ? 'small' : 'medium'} onClick={() => handleManageRolesClick(user)} title="Asignar/Quitar roles">
                       <GroupAddIcon />
                     </IconButton>
-                    <IconButton size={isMobile ? 'small' : 'medium'} onClick={() => handleUpdatePasswordClick(user)}>
+                    <IconButton size={isMobile ? 'small' : 'medium'} onClick={() => handleUpdatePasswordClick(user)} title="Cambiar contraseña">
                       <VpnKeyIcon />
                     </IconButton>
                   </TableCell>
@@ -295,7 +295,7 @@ const AdminUsers = () => {
             selectedUser.roles.map((role) => (
               <Box key={role.userol_id} sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                 <Typography sx={{ flexGrow: 1 }}>{role.role_name}</Typography>
-                <IconButton onClick={() => handleRemoveRole(role.userol_id)} color="secondary">
+                <IconButton onClick={() => handleRemoveRole(role.userol_id)} color="secondary" title="Eliminar rol">
                   <DeleteIcon />
                 </IconButton>
               </Box>
