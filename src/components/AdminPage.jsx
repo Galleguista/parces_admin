@@ -27,7 +27,7 @@ const sections = [
   { id: 'resources', label: 'Recursos' },
   { id: 'achievements', label: 'Logros' },
   { id: 'forum', label: 'Foro' },
-  { id: 'events', label: 'Eventos' },
+  // { id: 'events', label: 'Eventos' },
   { id: 'feed', label: 'Novedades' },
   { id: 'admin', label: 'Vista administrador' },
 
@@ -152,7 +152,7 @@ const AdminPage = () => {
         {activeSection === 'resources' && <ResourcesSection />}
         {activeSection === 'achievements' && <AchievementsSection />}
         {activeSection === 'forum' && <ForumSection />}
-        {activeSection === 'events' && <EventsSection />}
+        {/* {activeSection === 'events' && <EventsSection />} */}
         {activeSection === 'feed' && <Feed />}
         {activeSection === 'admin' && <AdminSection />}
       </Box>

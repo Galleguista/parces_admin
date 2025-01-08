@@ -1,27 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Grid, Box, Card, CardHeader, CardContent, CardActions, Avatar, IconButton, Typography, TextField, Button } from '@mui/material';
-import { Favorite, Share, MoreVert, ChatBubbleOutline, Send } from '@mui/icons-material';
+import { Container, Grid, Box, Card, CardHeader, CardContent, CardActions, Avatar, IconButton, Typography, TextField, Button, Snackbar, Alert } from '@mui/material';
+import { Favorite, Share, MoreVert, ChatBubbleOutline, Send, Refresh } from '@mui/icons-material';
 import axios from 'axios';
 
 const API_URL = `${import.meta.env.VITE_API_URL}/muro`;
-const FILES_URL = `${import.meta.env.VITE_FILES_URL}/files`;
+const FILES_URL = `${import.meta.env.VITE_PUBLIC_URL}`;
 
 const PostCard = ({ post }) => (
   <Card sx={{ mb: 2, borderRadius: 2, boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)', overflow: 'hidden' }}>
     <CardHeader
       avatar={<Avatar src={post.usuario?.avatar ? `${FILES_URL}${post.usuario.avatar}` : 'https://via.placeholder.com/40'} sx={{ width: 40, height: 40 }} />}
       action={
-        <IconButton aria-label="settings">
+        <IconButton aria-label="opciones">
           <MoreVert />
         </IconButton>
       }
-      title={<Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 'bold' }}>{post.usuario?.nombre || 'Anonymous'}</Typography>}
+      title={<Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 'bold' }}>{post.usuario?.nombre || 'Anónimo'}</Typography>}
       subheader={<Typography variant="body2" color="textSecondary">{new Date(post.fecha_publicacion).toLocaleString()}</Typography>}
     />
     <CardContent sx={{ paddingTop: 0 }}>
-      <Typography variant="body2">
-        {post.contenido}
-      </Typography>
+      <Typography variant="body2">{post.contenido}</Typography>
     </CardContent>
     {post.imagen_url && (
       <Box component="div" sx={{ p: 0, backgroundColor: 'rgba(0, 0, 0, 0.03)' }}>
@@ -29,13 +27,13 @@ const PostCard = ({ post }) => (
       </Box>
     )}
     <CardActions disableSpacing sx={{ paddingTop: 0 }}>
-      <IconButton aria-label="add to favorites">
+      <IconButton aria-label="Me gusta">
         <Favorite fontSize="small" />
       </IconButton>
-      <IconButton aria-label="share">
+      <IconButton aria-label="Compartir">
         <Share fontSize="small" />
       </IconButton>
-      <IconButton aria-label="comment">
+      <IconButton aria-label="Comentar">
         <ChatBubbleOutline fontSize="small" />
       </IconButton>
     </CardActions>
@@ -44,6 +42,7 @@ const PostCard = ({ post }) => (
 
 const NewPostCard = ({ onPostCreated, user }) => {
   const [newPost, setNewPost] = useState({ contenido: '', imagen: null });
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -61,55 +60,59 @@ const NewPostCard = ({ onPostCreated, user }) => {
       formData.append('imagen', newPost.imagen);
     }
 
-    // Agregar console.log para ver el contenido del formData
-    console.log('Contenido:', newPost.contenido);
-    console.log('Imagen:', newPost.imagen);
-
     try {
-      const response = await axios.post(`${API_URL}/create`, formData, {
+      await axios.post(`${API_URL}/create`, formData, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'multipart/form-data',
         },
       });
-
-      // Log del response en caso de éxito
-      console.log('Respuesta del backend:', response.data);
-
-      onPostCreated(response.data);
+      onPostCreated();
+      setSnackbarOpen(true); // Mostrar mensaje de éxito
       setNewPost({ contenido: '', imagen: null });
     } catch (error) {
-      // Log del error en caso de fallo
       console.error('Error al crear la publicación:', error.response ? error.response.data : error.message);
     }
   };
 
   return (
-    <Card sx={{ mb: 2, borderRadius: 2, boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)', overflow: 'hidden' }}>
-      <CardHeader
-        avatar={<Avatar src={user?.avatar ? `${FILES_URL}${user.avatar}` : 'https://via.placeholder.com/40'} sx={{ width: 40, height: 40 }} />}
-        title={<Typography variant="h6" sx={{ fontSize: '1rem' }}>What's on your mind?</Typography>}
-      />
-      <CardContent>
-        <TextField
-          name="contenido"
-          multiline
-          rows={3}
-          variant="outlined"
-          placeholder="Write something..."
-          fullWidth
-          value={newPost.contenido}
-          onChange={handleInputChange}
-          sx={{ fontSize: '0.875rem' }}
+    <>
+      <Card sx={{ mb: 2, borderRadius: 2, boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)', overflow: 'hidden' }}>
+        <CardHeader
+          avatar={<Avatar src={user?.avatar ? `${FILES_URL}${user.avatar}` : 'https://via.placeholder.com/40'} sx={{ width: 40, height: 40 }} />}
+          title={<Typography variant="h6" sx={{ fontSize: '1rem' }}>¿Qué estás pensando?</Typography>}
         />
-        <input type="file" onChange={handleFileChange} />
-      </CardContent>
-      <CardActions>
-        <Button variant="contained" color="primary" endIcon={<Send />} onClick={handleCreatePost} sx={{ marginLeft: 'auto', fontSize: '0.875rem' }}>
-          Post
-        </Button>
-      </CardActions>
-    </Card>
+        <CardContent>
+          <TextField
+            name="contenido"
+            multiline
+            rows={3}
+            variant="outlined"
+            placeholder="Escribe algo..."
+            fullWidth
+            value={newPost.contenido}
+            onChange={handleInputChange}
+            sx={{ fontSize: '0.875rem' }}
+          />
+          <input type="file" onChange={handleFileChange} />
+        </CardContent>
+        <CardActions>
+          <Button variant="contained" color="primary" endIcon={<Send />} onClick={handleCreatePost} sx={{ marginLeft: 'auto', fontSize: '0.875rem' }}>
+            Publicar
+          </Button>
+        </CardActions>
+      </Card>
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={() => setSnackbarOpen(false)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert onClose={() => setSnackbarOpen(false)} severity="success" sx={{ width: '100%' }}>
+          ¡Publicación creada con éxito! 🎉
+        </Alert>
+      </Snackbar>
+    </>
   );
 };
 
@@ -117,49 +120,53 @@ const Feed = () => {
   const [publicaciones, setPublicaciones] = useState([]);
   const [user, setUser] = useState(null);
 
+  const fetchPublicaciones = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/publicaciones`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      setPublicaciones(response.data);
+    } catch (error) {
+      console.error('Error al obtener publicaciones:', error);
+    }
+  };
+
   useEffect(() => {
     const fetchUser = async () => {
       try {
         const response = await axios.get(`${import.meta.env.VITE_API_URL}/usuarios/me`, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,  
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
           },
         });
-        setUser({
-          ...response.data,
-          avatar: response.data.avatar ? response.data.avatar : null,
-        });
+        setUser(response.data);
       } catch (error) {
-        console.error('Error fetching user data:', error);
+        console.error('Error al obtener datos del usuario:', error);
       }
     };
 
-    const fetchPublicaciones = async () => {
-      try {
-        const response = await axios.get(`${API_URL}/publicaciones`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,  
-          },
-        });
-        setPublicaciones(response.data);
-      } catch (error) {
-        console.error('Error fetching publicaciones:', error);
-      }
-    };
-    
     fetchUser();
     fetchPublicaciones();
-  }, []);
 
-  const handlePostCreated = (newPost) => {
-    setPublicaciones([newPost, ...publicaciones]);
-  };
+    const interval = setInterval(fetchPublicaciones, 30000); // Refrescar cada 30 segundos
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <Container maxWidth="md">
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+        <Typography variant="h5" fontWeight="bold">
+          Muro
+        </Typography>
+        <IconButton onClick={fetchPublicaciones}>
+          <Refresh />
+        </IconButton>
+      </Box>
       <Grid container spacing={2}>
         <Grid item xs={12}>
-          <NewPostCard onPostCreated={handlePostCreated} user={user} />
+          <NewPostCard onPostCreated={fetchPublicaciones} user={user} />
         </Grid>
         {publicaciones.map((post) => (
           <Grid item xs={12} key={post.publicacion_id}>

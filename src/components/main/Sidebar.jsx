@@ -18,14 +18,14 @@ const Sidebar = ({ activeSection, handleSectionChange, userProfile, mobileOpen, 
   const isAdmin = userProfile.isAdmin;
 
   const sections = [
-    { id: 'profile', icon: <AssignmentIcon />, label: 'Perfil' },
+    { id: 'feed', icon: <StackedBarChart />, label: 'Novedades' },
     { id: 'projects', icon: <ExploreIcon />, label: 'Proyectos' },
     { id: 'groups', icon: <GroupIcon />, label: 'Grupos' },
     { id: 'resources', icon: <SchoolIcon />, label: 'Recursos' },
     { id: 'achievements', icon: <StarIcon />, label: 'Logros' },
     { id: 'forum', icon: <ForumIcon />, label: 'Foro' },
-    { id: 'events', icon: <EventIcon />, label: 'Eventos' },
-    { id: 'feed', icon: <StackedBarChart />, label: 'Novedades' },
+    { id: 'profile', icon: <AssignmentIcon />, label: 'Perfil' },
+    // { id: 'events', icon: <EventIcon />, label: 'Eventos' },
     ...(isAdmin ? [{ id: 'admin', icon: <AdminPanelSettingsIcon />, label: 'Admin' }] : []) // Añade la sección de admin si es administrador
   ];
 
