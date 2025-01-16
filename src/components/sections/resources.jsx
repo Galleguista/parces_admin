@@ -211,7 +211,7 @@ const ResourcesSection = () => {
               id="pdf-upload"
               margin="dense"
               type="file"
-              fullWidth
+                fullWidth
               name="pdf"
               inputProps={{ accept: 'application/pdf' }}
               onChange={handleInputChange}

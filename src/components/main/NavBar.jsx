@@ -17,6 +17,7 @@ import {
   Popover,
   Drawer,
 } from '@mui/material';
+import MenuIcon from '@mui/icons-material/Menu';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import MailIcon from '@mui/icons-material/Mail';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
@@ -25,7 +26,13 @@ import ChatIcon from '@mui/icons-material/Chat';
 import CloseIcon from '@mui/icons-material/Close';
 import axios from 'axios';
 
-const Navbar = ({ onMessagesClick, currentSection, onLogout, onStartConversation }) => {
+const Navbar = ({
+  onMessagesClick,
+  currentSection,
+  onLogout,
+  onStartConversation,
+  handleDrawerToggle, // Agregado para controlar el botón del menú móvil
+}) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -61,34 +68,30 @@ const Navbar = ({ onMessagesClick, currentSection, onLogout, onStartConversation
     }
   };
 
- const handleStartChat = async (userId) => {
-  try {
-    const response = await axios.post(
-      `${import.meta.env.VITE_API_URL}/conversaciones/private-chat`,
-      { memberId: userId },
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
+  const handleStartChat = async (userId) => {
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/conversaciones/private-chat`,
+        { memberId: userId },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        }
+      );
+
+      const conversationId = response.data.conversacion_id;
+
+      if (onStartConversation) {
+        onStartConversation(conversationId);
       }
-    );
-
-    const conversationId = response.data.conversacion_id;
-
-    // Llama la función para abrir la conversación directamente
-    if (onStartConversation) {
-      onStartConversation(conversationId);
+      setSearchQuery('');
+      setSearchResults([]);
+      setIsSearchDrawerOpen(false);
+    } catch (error) {
+      console.error('Error al iniciar conversación:', error);
     }
-
-    // Limpia el buscador
-    setSearchQuery('');
-    setSearchResults([]);
-    setIsSearchDrawerOpen(false); // Cierra el drawer si es móvil
-  } catch (error) {
-    console.error('Error al iniciar conversación:', error);
-  }
-};
-
+  };
 
   const handleNotificationClick = (event) => {
     setNotificationAnchor(event.currentTarget);
@@ -110,26 +113,28 @@ const Navbar = ({ onMessagesClick, currentSection, onLogout, onStartConversation
         borderBottom: '1px solid rgba(0, 0, 0, 0.12)',
       }}
     >
-      <Toolbar sx={{ flexWrap: 'wrap' }}>
-        <Typography variant="h6" sx={{ flexGrow: 1 }}>
-          {currentSection}
-        </Typography>
-        {/* Search Icon for Mobile */}
+      <Toolbar sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        {/* Botón de menú para mostrar el Sidebar */}
         <IconButton
           color="inherit"
-          sx={{ display: { xs: 'block', sm: 'none' } }}
-          onClick={() => setIsSearchDrawerOpen(true)}
-        >
-          <SearchIcon />
-        </IconButton>
-        {/* Search Bar for Larger Screens */}
-        <Box
+          aria-label="open drawer"
+          edge="start"
+          onClick={handleDrawerToggle}
           sx={{
-            display: { xs: 'none', sm: 'flex' },
-            position: 'relative',
-            alignItems: 'center',
+            display: { xs: 'block', sm: 'none' },
+            mr: 2,
           }}
         >
+          <MenuIcon />
+        </IconButton>
+
+        {/* Título de la sección actual */}
+        <Typography variant="h6" noWrap sx={{ flexGrow: 1 }}>
+          {currentSection}
+        </Typography>
+
+        {/* Barra de búsqueda para pantallas grandes */}
+        <Box sx={{ display: { xs: 'none', sm: 'flex' }, position: 'relative', alignItems: 'center' }}>
           <TextField
             variant="outlined"
             size="small"
@@ -191,39 +196,45 @@ const Navbar = ({ onMessagesClick, currentSection, onLogout, onStartConversation
             </Box>
           )}
         </Box>
-        <IconButton color="inherit" onClick={handleNotificationClick}>
-          <Badge badgeContent={0} color="primary">
-            <NotificationsIcon />
-          </Badge>
-        </IconButton>
-        <Popover
-          open={isNotificationOpen}
-          anchorEl={notificationAnchor}
-          onClose={handleNotificationClose}
-          anchorOrigin={{
-            vertical: 'bottom',
-            horizontal: 'center',
-          }}
-          transformOrigin={{
-            vertical: 'top',
-            horizontal: 'center',
-          }}
-        >
-          <Box sx={{ p: 2 }}>
-            <Typography variant="body2">No tienes notificaciones</Typography>
-          </Box>
-        </Popover>
-        <IconButton color="inherit" onClick={onMessagesClick}>
-          <Badge badgeContent={3} color="primary">
-            <MailIcon />
-          </Badge>
-        </IconButton>
-        <IconButton color="inherit" onClick={onLogout}>
-          <ExitToAppIcon />
-        </IconButton>
+
+        {/* Íconos de acciones */}
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <IconButton color="inherit" onClick={handleNotificationClick}>
+            <Badge badgeContent={0} color="primary">
+              <NotificationsIcon />
+            </Badge>
+          </IconButton>
+          <Popover
+            open={isNotificationOpen}
+            anchorEl={notificationAnchor}
+            onClose={handleNotificationClose}
+            anchorOrigin={{
+              vertical: 'bottom',
+              horizontal: 'center',
+            }}
+            transformOrigin={{
+              vertical: 'top',
+              horizontal: 'center',
+            }}
+          >
+            <Box sx={{ p: 2 }}>
+              <Typography variant="body2">No tienes notificaciones</Typography>
+            </Box>
+          </Popover>
+
+          <IconButton color="inherit" onClick={onMessagesClick}>
+            <Badge badgeContent={3} color="primary">
+              <MailIcon />
+            </Badge>
+          </IconButton>
+
+          <IconButton color="inherit" onClick={onLogout}>
+            <ExitToAppIcon />
+          </IconButton>
+        </Box>
       </Toolbar>
 
-      {/* Search Drawer for Mobile */}
+      {/* Search Drawer para móviles */}
       <Drawer
         anchor="top"
         open={isSearchDrawerOpen}
