@@ -9,21 +9,27 @@ import theme from '../../theme';
 const LoginPage = ({ onLogin }) => {
   const [usuario, setUsuario] = useState('');
   const [password, setPassword] = useState('');
-  const [showRegister, setShowRegister] = useState(false); // Estado para alternar entre login y registro
+  const [showRegister, setShowRegister] = useState(false); 
   const navigate = useNavigate(); // Inicializa useNavigate
 
   const handleLogin = async (e) => {
     e.preventDefault();
 
     try {
+      // Solicitud al backend para autenticar
       const response = await axios.post(`${import.meta.env.VITE_API_URL}/auth/login`, {
         usuario,
         password,
       });
-      const { access_token } = response.data;
+
+      const { access_token, refresh_token } = response.data;
+
+      // Guardar tokens en localStorage
       localStorage.setItem('token', access_token);
-      onLogin();
-      navigate('/admin'); // Navegar manualmente a /admin después de loguearse
+      localStorage.setItem('refresh_token', refresh_token);
+
+      onLogin(); // Actualizar estado global de inicio de sesión
+      navigate('/admin'); // Navegar a la página de administrador
     } catch (error) {
       console.error('Error durante el inicio de sesión:', error.response || error);
       alert('Credenciales inválidas o error en la autenticación');

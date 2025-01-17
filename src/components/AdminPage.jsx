@@ -54,23 +54,21 @@ const AdminPage = () => {
     };
 
     const fetchUserProfile = async () => {
+      const token = localStorage.getItem('token');
+    
       try {
         const response = await axios.get(API_URL, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
-
-        const publicUrl = import.meta.env.VITE_PUBLIC_URL;
-        const profileData = {
-          ...response.data,
-          avatarUrl: response.data.avatar ? `${publicUrl}${response.data.avatar}` : '',
-        };
-        setUserProfile(profileData);
+    
+        setUserProfile(response.data);
       } catch (error) {
         console.error('Error fetching user profile:', error);
+        localStorage.removeItem('token');
+        navigate('/login');
       }
     };
+    
 
     const fetchRoleDetails = async (roleId) => {
       try {

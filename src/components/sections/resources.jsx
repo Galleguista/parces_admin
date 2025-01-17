@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
-  Grid, Card, CardContent, Typography, IconButton, Box, Avatar, InputLabel, Input, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button
+  Grid, Card, CardContent, Typography, IconButton, Box, Avatar, InputLabel, Input, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Fab
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
@@ -115,12 +115,8 @@ const ResourcesSection = () => {
 
   return (
     <>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h4" sx={{ fontWeight: 'bold' }}>Library Resources</Typography>
-        <Button variant="contained" color="primary" startIcon={<AddIcon />} onClick={() => handleOpenDialog()}>
-          Add Resource
-        </Button>
-      </Box>
+
+
       <Grid container spacing={3}>
         {resources.map((resource) => (
           <Grid item xs={12} sm={6} md={3} key={resource.recurso_id}>
@@ -159,6 +155,21 @@ const ResourcesSection = () => {
         ))}
       </Grid>
 
+      {/* Botón flotante para agregar recurso */}
+      <Fab
+        color="primary"
+        aria-label="add"
+        onClick={() => handleOpenDialog()}
+        sx={{
+          position: 'fixed',
+          bottom: 16,
+          right: 16,
+        }}
+      >
+        <AddIcon />
+      </Fab>
+
+      {/* Diálogo para agregar/editar recurso */}
       <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
         <DialogTitle>{selectedResource ? 'Edit Resource' : 'Add Resource'}</DialogTitle>
         <DialogContent>
@@ -211,7 +222,7 @@ const ResourcesSection = () => {
               id="pdf-upload"
               margin="dense"
               type="file"
-                fullWidth
+              fullWidth
               name="pdf"
               inputProps={{ accept: 'application/pdf' }}
               onChange={handleInputChange}

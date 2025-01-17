@@ -25,6 +25,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import ChatIcon from '@mui/icons-material/Chat';
 import CloseIcon from '@mui/icons-material/Close';
 import axios from 'axios';
+import Notifications from './Notifications';
 
 const Navbar = ({
   onMessagesClick,
@@ -199,11 +200,7 @@ const Navbar = ({
 
         {/* Íconos de acciones */}
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <IconButton color="inherit" onClick={handleNotificationClick}>
-            <Badge badgeContent={0} color="primary">
-              <NotificationsIcon />
-            </Badge>
-          </IconButton>
+          <Notifications/>
           <Popover
             open={isNotificationOpen}
             anchorEl={notificationAnchor}

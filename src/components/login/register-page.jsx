@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Container, Box, Card, CardContent, TextField, Button, Typography, Avatar, CssBaseline, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton } from '@mui/material';
+import { Container, Box, Card, CardContent, TextField, Button, Typography, Avatar, CssBaseline, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import { ThemeProvider } from '@mui/material/styles';
@@ -8,23 +8,39 @@ import axios from 'axios';
 import theme from '../../theme';
 
 const RegisterPage = ({ onRegister }) => {
-  const [nombre, setNombre] = useState('');
-  const [usuario, setUsuario] = useState('');
-  const [correoElectronico, setCorreoElectronico] = useState('');
-  const [password, setPassword] = useState('');
-  const [celular, setCelular] = useState('');
-  const [direccion, setDireccion] = useState('');
+  const [formData, setFormData] = useState({
+    nombre: '',
+    usuario: '',
+    correoElectronico: '',
+    password: '',
+    confirmPassword: '',
+    celular: '',
+    direccion: '',
+  });
   const [errors, setErrors] = useState({});
+  const [passwordChecklist, setPasswordChecklist] = useState({
+    length: false,
+    uppercase: false,
+    number: false,
+    specialChar: false,
+  });
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
 
   const isValidEmail = (email) => {
-    const re = /\S+@\S+\.\S+/;
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return re.test(email);
   };
 
-  const isValidPassword = (password) => {
-    return password.length >= 6;
+  const validatePassword = (password) => {
+    const checklist = {
+      length: password.length >= 8,
+      uppercase: /[A-Z]/.test(password),
+      number: /\d/.test(password),
+      specialChar: /[@$!%*?&]/.test(password),
+    };
+    setPasswordChecklist(checklist);
+    return Object.values(checklist).every(Boolean);
   };
 
   const validateField = (name, value) => {
@@ -47,8 +63,13 @@ const RegisterPage = ({ onRegister }) => {
         }
         break;
       case 'password':
-        if (!isValidPassword(value)) {
-          errorMessage = 'La contraseña debe tener al menos 6 caracteres';
+        if (!validatePassword(value)) {
+          errorMessage = 'La contraseña no cumple con los requisitos';
+        }
+        break;
+      case 'confirmPassword':
+        if (value !== formData.password) {
+          errorMessage = 'Las contraseñas no coinciden';
         }
         break;
       default:
@@ -60,13 +81,7 @@ const RegisterPage = ({ onRegister }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if (name === 'nombre') setNombre(value);
-    if (name === 'usuario') setUsuario(value);
-    if (name === 'correoElectronico') setCorreoElectronico(value);
-    if (name === 'password') setPassword(value);
-    if (name === 'celular') setCelular(value);
-    if (name === 'direccion') setDireccion(value);
-
+    setFormData((prevData) => ({ ...prevData, [name]: value }));
     validateField(name, value);
   };
 
@@ -74,38 +89,42 @@ const RegisterPage = ({ onRegister }) => {
     e.preventDefault();
 
     let newErrors = {};
-    if (!nombre) {
-      newErrors.nombre = 'El nombre es obligatorio';
-    }
-    if (!usuario) {
-      newErrors.usuario = 'El nombre de usuario es obligatorio';
-    }
-    if (!isValidEmail(correoElectronico)) {
-      newErrors.correoElectronico = 'Debe ingresar un correo electrónico válido';
-    }
-    if (!isValidPassword(password)) {
-      newErrors.password = 'La contraseña debe tener al menos 6 caracteres';
-    }
+    Object.keys(formData).forEach((field) => {
+      validateField(field, formData[field]);
+      if (errors[field]) {
+        newErrors[field] = errors[field];
+      }
+    });
 
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length > 0) return;
 
-    const status = true;
     try {
       const response = await axios.post(`${import.meta.env.VITE_API_URL}/usuarios/register`, {
-        nombre,
-        usuario, // Enviamos el nombre de usuario
-        correo_electronico: correoElectronico,
-        password,
-        celular,
-        status,
-        direccion,
+        nombre: formData.nombre,
+        usuario: formData.usuario,
+        correo_electronico: formData.correoElectronico,
+        password: formData.password,
+        celular: null,
+        direccion: null,
+        status: true,
       });
 
       if (response.data.success) {
-        onRegister();
-        setOpen(true);
+        alert('Registro exitoso');
+
+        // Inicia sesión automáticamente usando las credenciales proporcionadas
+        const loginResponse = await axios.post(`${import.meta.env.VITE_API_URL}/auth/login`, {
+          usuario: formData.usuario,
+          password: formData.password,
+        });
+
+        const { access_token, refresh_token } = loginResponse.data;
+        localStorage.setItem('token', access_token);
+        localStorage.setItem('refresh_token', refresh_token);
+        onRegister(); // Actualizar el estado de login en la app principal
+        navigate('/admin'); // Redirigir al admin directamente
       } else {
         alert(response.data.message);
       }
@@ -113,11 +132,6 @@ const RegisterPage = ({ onRegister }) => {
       console.error('Error durante el registro:', error);
       alert('Error durante el registro. Verifique su información o intente nuevamente.');
     }
-  };
-
-  const handleClose = () => {
-    setOpen(false);
-    navigate('/login');
   };
 
   return (
@@ -157,9 +171,8 @@ const RegisterPage = ({ onRegister }) => {
                     name="nombre"
                     autoComplete="nombre"
                     autoFocus
-                    value={nombre}
+                    value={formData.nombre}
                     onChange={handleChange}
-                    onBlur={(e) => validateField(e.target.name, e.target.value)}
                     error={!!errors.nombre}
                     helperText={errors.nombre}
                   />
@@ -171,9 +184,8 @@ const RegisterPage = ({ onRegister }) => {
                     label="Nombre de Usuario"
                     name="usuario"
                     autoComplete="username"
-                    value={usuario}
+                    value={formData.usuario}
                     onChange={handleChange}
-                    onBlur={(e) => validateField(e.target.name, e.target.value)}
                     error={!!errors.usuario}
                     helperText={errors.usuario}
                   />
@@ -185,9 +197,8 @@ const RegisterPage = ({ onRegister }) => {
                     label="Correo Electrónico"
                     name="correoElectronico"
                     autoComplete="email"
-                    value={correoElectronico}
+                    value={formData.correoElectronico}
                     onChange={handleChange}
-                    onBlur={(e) => validateField(e.target.name, e.target.value)}
                     error={!!errors.correoElectronico}
                     helperText={errors.correoElectronico}
                   />
@@ -200,31 +211,29 @@ const RegisterPage = ({ onRegister }) => {
                     type="password"
                     id="password"
                     autoComplete="current-password"
-                    value={password}
+                    value={formData.password}
                     onChange={handleChange}
-                    onBlur={(e) => validateField(e.target.name, e.target.value)}
                     error={!!errors.password}
                     helperText={errors.password}
                   />
+                  <Box sx={{ mt: 1, textAlign: 'left', fontSize: '0.9rem' }}>
+                    <Typography color={passwordChecklist.length ? 'green' : 'red'}>✔ Al menos 8 caracteres</Typography>
+                    <Typography color={passwordChecklist.uppercase ? 'green' : 'red'}>✔ Una letra mayúscula</Typography>
+                    <Typography color={passwordChecklist.number ? 'green' : 'red'}>✔ Un número</Typography>
+                    <Typography color={passwordChecklist.specialChar ? 'green' : 'red'}>✔ Un carácter especial</Typography>
+                  </Box>
                   <TextField
                     margin="normal"
+                    required
                     fullWidth
-                    id="celular"
-                    label="Celular"
-                    name="celular"
-                    autoComplete="celular"
-                    value={celular}
+                    name="confirmPassword"
+                    label="Confirmar Contraseña"
+                    type="password"
+                    id="confirmPassword"
+                    value={formData.confirmPassword}
                     onChange={handleChange}
-                  />
-                  <TextField
-                    margin="normal"
-                    fullWidth
-                    id="direccion"
-                    label="Dirección"
-                    name="direccion"
-                    autoComplete="direccion"
-                    value={direccion}
-                    onChange={handleChange}
+                    error={!!errors.confirmPassword}
+                    helperText={errors.confirmPassword}
                   />
                   <Button
                     type="submit"
@@ -239,25 +248,6 @@ const RegisterPage = ({ onRegister }) => {
             </CardContent>
           </Card>
         </Box>
-
-        {/* Ventana Modal */}
-        <Dialog open={open} onClose={handleClose}>
-          <DialogTitle sx={{ textAlign: 'center' }}>
-            <IconButton>
-              <CheckCircleOutlineIcon color="success" sx={{ fontSize: 60 }} />
-            </IconButton>
-          </DialogTitle>
-          <DialogContent>
-            <DialogContentText sx={{ textAlign: 'center' }}>
-              Te has registrado correctamente, ahora inicia sesión.
-            </DialogContentText>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleClose} variant="contained" color="primary" fullWidth>
-              Iniciar sesión
-            </Button>
-          </DialogActions>
-        </Dialog>
       </Container>
     </ThemeProvider>
   );
