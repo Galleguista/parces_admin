@@ -26,11 +26,13 @@ import {
   Nature,
   ContactMail,
   AttachFile,
-  LocationOn
+  LocationOn,
+  HowToVote
 } from '@mui/icons-material';
 import axios from 'axios';
 import ProjectMembers from './ProjectMembers';
 import ProjectLog from './ProjectLog';
+import ProjectPostulations from './ProjectPostulations';
 
 const instance = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000',
@@ -57,7 +59,7 @@ const ProjectDetails = ({ project, onClose, onUpdateProject }) => {
 
   const updateProject = async (updatedProject) => {
     try {
-      const response = await instance.patch(`/proyectos/${updatedProject.proyecto_id}`, updatedProject, {
+      const response = await instance.put(`/proyectos/${updatedProject.proyecto_id}`, updatedProject, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
@@ -129,6 +131,8 @@ const ProjectDetails = ({ project, onClose, onUpdateProject }) => {
           <Tab label="Información" icon={<Info />} />
           <Tab label="Miembros" icon={<People />} />
           <Tab label="Bitácora" icon={<Nature />} />
+          <Tab label="Postulaciones" icon={<HowToVote />} />
+
         </Tabs>
 
         {tabValue === 0 && (
@@ -230,6 +234,12 @@ const ProjectDetails = ({ project, onClose, onUpdateProject }) => {
         )}
         {tabValue === 1 && <ProjectMembers projectId={project.proyecto_id} />}
         {tabValue === 2 && <ProjectLog projectId={project.proyecto_id} />}
+        {tabValue === 3 && (
+            <ProjectPostulations
+            projectId={project.proyecto_id}
+            projectOwnerId={project.usuario_id}
+          />          
+          )}
       </DialogContent>
 
       {isEditing && (

@@ -45,7 +45,7 @@ const Notifications = () => {
     setAnchorEl(event.currentTarget);
   };
 
-  const handleClose = () => {
+  const handleClose = () => {   
     setAnchorEl(null);
   };
 

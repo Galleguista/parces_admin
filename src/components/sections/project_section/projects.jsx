@@ -66,7 +66,7 @@ const ProjectsSection = () => {
   const handleCreateOrUpdateProject = async (projectData) => {
     try {
       if (selectedProject) {
-        const response = await instance.patch(`/proyectos/${selectedProject.proyecto_id}`, projectData);
+        const response = await instance.put(`/proyectos/${selectedProject.proyecto_id}`, projectData);
         setProjects((prevProjects) =>
           prevProjects.map((proj) =>
             proj.proyecto_id === selectedProject.proyecto_id ? response.data : proj

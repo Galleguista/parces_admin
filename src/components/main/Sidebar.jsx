@@ -11,11 +11,15 @@ import EventIcon from '@mui/icons-material/Event';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings'; // Asegúrate de importar esto
 import { StackedBarChart } from '@mui/icons-material';
 
+const PUBLIC_URL = `${import.meta.env.VITE_PUBLIC_URL}`;
+
 const drawerWidth = 280;
 
 const Sidebar = ({ activeSection, handleSectionChange, userProfile, mobileOpen, handleDrawerToggle }) => {
   const theme = useTheme();
   const isAdmin = userProfile.isAdmin;
+  const avatarUrl = `${PUBLIC_URL}${userProfile.avatar}`; 
+  console.log('testeo de user profile',avatarUrl)
 
   const sections = [
     { id: 'feed', icon: <StackedBarChart />, label: 'Novedades' },
