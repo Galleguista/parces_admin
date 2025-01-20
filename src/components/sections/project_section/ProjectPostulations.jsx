@@ -9,8 +9,18 @@ import {
   TextField,
   Paper,
   Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Card,
+  CardContent,
+  Icon,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import InfoIcon from '@mui/icons-material/Info';
+import QuestionMarkIcon from '@mui/icons-material/HelpOutline';
+import AnswerIcon from '@mui/icons-material/CheckCircleOutline';
 import axios from 'axios';
 
 const ProjectPostulations = ({ projectId }) => {
@@ -23,8 +33,10 @@ const ProjectPostulations = ({ projectId }) => {
   });
   const [newPregunta, setNewPregunta] = useState('');
   const [respuestas, setRespuestas] = useState({});
-  const [loading, setLoading] = useState(true); // Agregar indicador de carga
-  const [error, setError] = useState(null); // Manejar errores
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedPostulacion, setSelectedPostulacion] = useState(null);
 
   useEffect(() => {
     fetchPostulationsData();
@@ -80,7 +92,7 @@ const ProjectPostulations = ({ projectId }) => {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         },
       );
-      fetchPostulationsData(); // Refresca los datos después de enviar las respuestas
+      fetchPostulationsData();
     } catch (error) {
       console.error('Error al enviar respuestas:', error);
     }
@@ -88,6 +100,43 @@ const ProjectPostulations = ({ projectId }) => {
 
   const handleChangeRespuesta = (preguntaId, value) => {
     setRespuestas({ ...respuestas, [preguntaId]: value });
+  };
+
+  const handleOpenDialog = (postulacion) => {
+    setSelectedPostulacion(postulacion);
+    setDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setDialogOpen(false);
+    setSelectedPostulacion(null);
+  };
+
+  const handleAceptarPostulacion = async () => {
+    try {
+      await axios.post(
+        `${import.meta.env.VITE_API_URL}/proyectos/${projectId}/postulacion/${selectedPostulacion.postulacion_id}/aceptar`,
+        {},
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } },
+      );
+      fetchPostulationsData();
+      handleCloseDialog();
+    } catch (error) {
+      console.error('Error al aceptar la postulación:', error);
+    }
+  };
+
+  const handleRechazarPostulacion = async () => {
+    try {
+      await axios.delete(
+        `${import.meta.env.VITE_API_URL}/proyectos/${projectId}/postulacion/${selectedPostulacion.postulacion_id}/rechazar`,
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } },
+      );
+      fetchPostulationsData();
+      handleCloseDialog();
+    } catch (error) {
+      console.error('Error al rechazar la postulación:', error);
+    }
   };
 
   const { esPropietario, esMiembro, yaPostulado, formulario, postulaciones } = data;
@@ -137,16 +186,54 @@ const ProjectPostulations = ({ projectId }) => {
               {postulaciones.map((postulacion) => (
                 <ListItem key={postulacion.postulacion_id}>
                   <ListItemText
-                    primary={`Usuario: ${postulacion.usuario_id}`}
-                    secondary={postulacion.respuestas
-                      .map((respuesta) => `${respuesta.pregunta}: ${respuesta.respuesta}`)
-                      .join(', ')}
+                    primary={`Usuario: ${postulacion.usuario_nombre}`}
+                    secondary={`Estado: ${postulacion.estado}`}
                   />
+                  <Button
+                    variant="outlined"
+                    startIcon={<InfoIcon />}
+                    onClick={() => handleOpenDialog(postulacion)}
+                  >
+                    Ver detalles
+                  </Button>
                 </ListItem>
               ))}
             </List>
           )}
         </Paper>
+
+        <Dialog open={dialogOpen} onClose={handleCloseDialog} fullWidth maxWidth="sm">
+          <DialogTitle>Detalles de la Postulación</DialogTitle>
+          <DialogContent>
+            {selectedPostulacion?.respuestas.map((respuesta, index) => (
+              <Card key={index} sx={{ mb: 2, p: 2, boxShadow: 2 }}>
+                <CardContent>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 'bold', display: 'flex', alignItems: 'center' }}>
+                    <Icon component={QuestionMarkIcon} sx={{ mr: 1 }} />
+                    Pregunta:
+                  </Typography>
+                  <Typography>{respuesta.pregunta}</Typography>
+                  <Typography
+                    variant="subtitle1"
+                    sx={{ fontWeight: 'bold', mt: 2, display: 'flex', alignItems: 'center' }}
+                  >
+                    <Icon component={AnswerIcon} sx={{ mr: 1 }} />
+                    Respuesta:
+                  </Typography>
+                  <Typography>{respuesta.respuesta}</Typography>
+                </CardContent>
+              </Card>
+            ))}
+          </DialogContent>
+          <DialogActions>
+            <Button variant="contained" color="success" onClick={handleAceptarPostulacion}>
+              Aceptar
+            </Button>
+            <Button variant="contained" color="error" onClick={handleRechazarPostulacion}>
+              Rechazar
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Box>
     );
   }
@@ -187,4 +274,3 @@ const ProjectPostulations = ({ projectId }) => {
 };
 
 export default ProjectPostulations;
-g
