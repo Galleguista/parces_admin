@@ -1,48 +1,108 @@
-import { useEffect, useState } from 'react';
-import io from 'socket.io-client';
+import { useEffect, useRef, useState } from 'react';
+import { io } from 'socket.io-client';
 
-const useChat = (chatId) => {
+const useChat = (conversacionId) => {
   const [messages, setMessages] = useState([]);
-  const [socket, setSocket] = useState(null);
+  const [isConversationEmpty, setIsConversationEmpty] = useState(false);
+  const [newMessage, setNewMessage] = useState('');
+  const [conversations, setConversations] = useState([]);
+  const socketRef = useRef(null);
+
+  const token = localStorage.getItem('token');
+  console.log('[useChat] Token:', token);
+
+  function parseJwt(token) {
+    try {
+      const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map(c => '%' + c.charCodeAt(0).toString(16).padStart(2, '0'))
+          .join('')
+      );
+      return JSON.parse(jsonPayload);
+    } catch (e) {
+      console.warn('[useChat] Error al parsear JWT:', e);
+      return null;
+    }
+  }
+
+  const decoded = token ? parseJwt(token) : null;
+  const usuario_id = decoded?.sub;
+  console.log('[useChat] Payload decodificado:', decoded);
+  console.log('[useChat] usuario_id:', usuario_id);
 
   useEffect(() => {
-    if (chatId) {
-      const newSocket = io(import.meta.env.VITE_API_URL, {
-        query: { chatId },
-        transports: ['websocket'],
-        auth: {
-          token: localStorage.getItem('token'),
-        },
-      });
-      setSocket(newSocket);
+    if (!token) return;
 
-      newSocket.on('connect', () => {
-        console.log('Connected to WebSocket server');
-        newSocket.emit('joinChat', { chatId });
-      });
+    const socket = io(import.meta.env.VITE_API_URL, {
+      transports: ['websocket'],
+      auth: { token },
+    });
 
-      newSocket.on('receiveMessage', (message) => {
-        setMessages((prevMessages) => [...prevMessages, message]);
-      });
+    socketRef.current = socket;
 
-      return () => {
-        newSocket.emit('leaveChat', { chatId });
-        newSocket.disconnect();
-      };
+    console.log('[useChat] Socket inicializado');
+
+    socket.on('connect', () => {
+      console.log('[ChatSidebar] Socket conectado:', socket.id);
+      socket.emit('get_conversations');
+    });
+
+    socket.on('conversation_list', (data) => {
+      console.log('[ChatSidebar] Conversaciones recibidas:', data);
+      setConversations(data);
+    });
+
+    socket.on('new_message', (message) => {
+      console.log('[useChat] Mensaje recibido:', message);
+      setMessages((prev) => [...prev, message]);
+    });
+
+    socket.on('disconnect', (reason) => {
+      console.log('[ChatSidebar] Socket desconectado:', reason);
+    });
+
+    return () => {
+      console.log('[ChatSidebar] Desconectando socket');
+      socket.disconnect();
+    };
+  }, [token]);
+
+  useEffect(() => {
+    if (socketRef.current && conversacionId) {
+      console.log('[useChat] Entrando a conversacionId:', conversacionId);
+      socketRef.current.emit('join_conversation', { conversacion_id: conversacionId });
     }
-  }, [chatId]);
 
-  const sendMessage = (message) => {
-    if (socket && message.trim() !== '') {
-      socket.emit('sendMessage', {
-        chatId,
-        usuarioId: localStorage.getItem('usuario_id'),
-        contenido: message,
+    return () => {
+      if (socketRef.current && conversacionId) {
+        console.log('[useChat] Saliendo de conversacionId:', conversacionId);
+        socketRef.current.emit('leave_conversation', { conversacion_id: conversacionId });
+      }
+    };
+  }, [conversacionId]);
+
+  const sendMessage = () => {
+    if (socketRef.current && newMessage.trim() && conversacionId) {
+      console.log('[useChat] Enviando mensaje:', newMessage);
+      socketRef.current.emit('send_message', {
+        conversacion_id: conversacionId,
+        contenido: newMessage,
       });
+      setNewMessage('');
     }
   };
 
-  return { messages, sendMessage };
+  return {
+    messages,
+    isConversationEmpty: messages.length === 0,
+    newMessage,
+    setNewMessage,
+    sendMessage,
+    usuario_id,
+    conversations,
+  };
 };
 
 export default useChat;
